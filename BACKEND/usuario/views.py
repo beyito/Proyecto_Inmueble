@@ -49,3 +49,14 @@ def registerAgente(request):
         return Response({'token': token.key,"user": serializer.data}, status=status.HTTP_201_CREATED)    
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(['GET'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def mostrarUsuarios(request):
+    print(request.user.idRol)
+    if not request.user.es_cliente():  # Verifica si el usuario no es administrador
+        return Response({"error": "No tienes permiso para ver los usuarios."}, status=status.HTTP_403_FORBIDDEN)
+    
+    usuarios = Usuario.objects.all()
+    serializer = UsuarioSerializer(usuarios, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
