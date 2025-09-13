@@ -1,5 +1,4 @@
 from rest_framework import serializers
-
 from .models import Usuario, Cliente, Agente   
 
 
@@ -80,3 +79,4 @@ class AgenteSerializer(serializers.ModelSerializer):
             instance.agente.save()
 
         return instance
+    
