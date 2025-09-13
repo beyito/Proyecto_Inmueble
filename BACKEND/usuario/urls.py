@@ -7,4 +7,5 @@ urlpatterns = [
     path('profile', views.profile, name='profile'),
     path('registerAgente', views.registerAgente, name='registerAgente'), # Registro de Agente
     path('mostrarUsuarios', views.mostrarUsuarios, name='mostrarUsuarios'), # Mostrar usuarios
+    path('editarUsuario', views.actualizarUsuario, name='editarUsuario'), # Editar usuario
 ]

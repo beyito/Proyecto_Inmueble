@@ -63,17 +63,6 @@ def register(request):
     })
 
 
-@api_view(['POST'])
-@authentication_classes([TokenAuthentication])
-@permission_classes([IsAuthenticated])
-def profile(request):
-    usuario = UsuarioSerializer(instance=request.user)
-    return Response({
-        "status": 1,
-        "error": 0,
-        "message": "PERFIL OBTENIDO",
-        "values": usuario.data
-    }, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
@@ -107,8 +96,7 @@ def profile(request):
         "error": 0,
         "message": "PERFIL OBTENIDO",
         "values": data
-    }, status=status.HTTP_200_OK)
-
+    })
 
 @api_view(['GET'])
 @authentication_classes([TokenAuthentication])
@@ -129,4 +117,49 @@ def mostrarUsuarios(request):
         "error": 0,
         "message": "USUARIOS OBTENIDOS",
         "values": serializer.data
+    })
+
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.response import Response
+from rest_framework import status
+from .serializer import ClienteSerializer, AgenteSerializer
+
+@api_view(['PUT'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def actualizarUsuario(request):
+    usuario = request.user  # 🔹 usuario autenticado
+    rol = getattr(usuario.idRol, 'nombre', None)  # obtenemos el nombre del rol
+    usuarioActualizado = UsuarioSerializer(usuario, data=request.data, partial=True)  # inicializamos el serializer
+    if rol == "Cliente":
+        serializer = ClienteSerializer(usuario, data=request.data, partial=True)
+        usuario.set_password(request.data.get('password', usuario.password))  # Actualiza la contraseña si se proporciona
+    elif rol == "Agente":
+        serializer = AgenteSerializer(usuario, data=request.data, partial=True)
+        usuario.set_password(request.data.get('password', usuario.password))  # Actualiza la contraseña si se proporciona
+    else:
+        return Response({
+            "status": 2,
+            "error": 1,
+            "message": "ROL NO PERMITIDO PARA ACTUALIZACIÓN",
+            "values": None
+        })
+    if usuarioActualizado.is_valid():
+        usuarioActualizado.save()  # guarda los cambios en el usuario
+    if serializer.is_valid():
+        serializer.save()  # llama al update del serializer correspondiente
+        return Response({
+            "status": 1,
+            "error": 0,
+            "message": "USUARIO ACTUALIZADO",
+            "values": serializer.data
+        })
+
+    return Response({
+        "status": 2,
+        "error": 1,
+        "message": "ERROR AL ACTUALIZAR",
+        "values": serializer.errors
     })

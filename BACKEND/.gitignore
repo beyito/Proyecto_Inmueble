@@ -1,0 +1,4 @@
+# Ignorar carpetas __pycache__ y archivos .pyc
+__pycache__/
+*.py[cod]
+*.cpython-*.pyc
