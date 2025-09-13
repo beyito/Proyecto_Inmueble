@@ -65,7 +65,7 @@ export default function Dashboard() {
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await fetch(`${BASE}/profile`, {
+        const res = await fetch(`${BASE}/profile/`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

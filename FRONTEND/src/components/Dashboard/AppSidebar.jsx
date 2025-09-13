@@ -19,6 +19,15 @@ export default function AppSidebar({
   }, [user]);
 
   const [query, setQuery] = useState("");
+  const [showModal, setShowModal] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [formData, setFormData] = useState({
+    nombre: user?.nombre || "",
+    correo: user?.correo || "",
+    telefono: user?.telefono || "",
+  });
+
+
 
   const items = [
     {
@@ -31,6 +40,36 @@ export default function AppSidebar({
     { key: "tareas", label: "Tareas", icon: ListIcon, href: "#/tareas" },
     { key: "reportes", label: "Reportes", icon: ChartIcon, href: "#/reportes" },
   ];
+
+  const handleSave = async () => {
+  try {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`http://127.0.0.1:8000/usuario/${user.id}/update`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Token ${token}`,
+      },
+      body: JSON.stringify(formData),
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      console.error("Error al guardar", errorData);
+      alert("Error al guardar perfil");
+      return;
+    }
+
+    alert("Perfil actualizado correctamente");
+    setEditing(false);
+    setShowModal(false);
+    window.location.reload(); // o disparar refetch
+  } catch (e) {
+    console.error("ERROR", e);
+    alert("Error de red");
+  }
+};
+
 
   const filtered = items.filter((i) =>
     i.label.toLowerCase().includes(query.toLowerCase())
@@ -50,7 +89,24 @@ export default function AppSidebar({
     >
       {/* Brand / avatar */}
       <div className="side-brand">
-        <div className="side-avatar">{initials[0]}</div>
+        <button
+            className="side-avatar"
+            onClick={() => setShowModal(true)}
+            title="Ver perfil"
+            style={{
+              background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
+              color: "#fff",
+              border: "none",
+              borderRadius: "50%",
+              width: 40,
+              height: 40,
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            {initials[0]}
+          </button>
+
         {!collapsed && (
           <div className="side-title">
             Inmo<span className="accent">biliaria</span>
@@ -98,7 +154,135 @@ export default function AppSidebar({
           </a>
         ))}
       </nav>
+      {showModal && (
+  <div
+    style={{
+      position: "fixed",
+      inset: 0,
+      backgroundColor: "rgba(0,0,0,0.4)",
+      zIndex: 9999,
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+    }}
+  >
+    <div
+      style={{
+        background: palette.cardBg,
+        color: palette.text,
+        padding: 24,
+        borderRadius: 12,
+        width: 360,
+        boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+      }}
+    >
+      <h2 style={{ marginTop: 0 }}>
+        {editing ? "Editar perfil" : "Mi perfil"}
+      </h2>
+
+      {editing ? (
+        <>
+          <div style={{ marginBottom: 10 }}>
+            <label><strong>Nombre:</strong></label>
+            <input
+              value={formData.nombre}
+              onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+              style={{ width: "100%", padding: 6, borderRadius: 6, border: "1px solid #ccc" }}
+            />
+          </div>
+          <div style={{ marginBottom: 10 }}>
+            <label><strong>Correo:</strong></label>
+            <input
+              value={formData.correo}
+              onChange={(e) => setFormData({ ...formData, correo: e.target.value })}
+              style={{ width: "100%", padding: 6, borderRadius: 6, border: "1px solid #ccc" }}
+            />
+          </div>
+          <div style={{ marginBottom: 10 }}>
+            <label><strong>Teléfono:</strong></label>
+            <input
+              value={formData.telefono}
+              onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
+              style={{ width: "100%", padding: 6, borderRadius: 6, border: "1px solid #ccc" }}
+            />
+          </div>
+        </>
+      ) : (
+        <>
+          <p><strong>Nombre:</strong> {user?.nombre}</p>
+          <p><strong>Correo:</strong> {user?.correo}</p>
+          <p><strong>Teléfono:</strong> {user?.telefono}</p>
+        </>
+      )}
+
+      <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 20, gap: 8 }}>
+        <button
+          onClick={() => {
+            if (editing) {
+              setEditing(false); // cancelar edición
+            } else {
+              setShowModal(false);
+            }
+          }}
+          style={{
+            background: "#e5e7eb",
+            color: "#111827",
+            border: "none",
+            borderRadius: 8,
+            padding: "8px 16px",
+            cursor: "pointer",
+            fontWeight: 600,
+          }}
+        >
+          {editing ? "Cancelar" : "Cerrar"}
+        </button>
+
+        {editing ? (
+          <button
+            onClick={handleSave}
+            style={{
+              background: "#10b981",
+              color: "#fff",
+              border: "none",
+              borderRadius: 8,
+              padding: "8px 16px",
+              cursor: "pointer",
+              fontWeight: 600,
+            }}
+          >
+            Guardar
+          </button>
+        ) : (
+          <button
+            onClick={() => {
+              setFormData({
+                nombre: user?.nombre || "",
+                correo: user?.correo || "",
+                telefono: user?.telefono || "",
+              });
+              setEditing(true);
+            }}
+            style={{
+              background: "#4f46e5",
+              color: "#fff",
+              border: "none",
+              borderRadius: 8,
+              padding: "8px 16px",
+              cursor: "pointer",
+              fontWeight: 600,
+            }}
+          >
+            Editar perfil
+          </button>
+        )}
+      </div>
+    </div>
+  </div>
+)}
+
+
     </aside>
+    
   );
 }
 
