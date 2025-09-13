@@ -1,0 +1,174 @@
+/* Paleta oscura profesional */
+:root {
+  --panel-bg: #111827; /* gris muy oscuro */
+  --panel-border: #1f2937; /* gris oscuro */
+  --text: #e5e7eb; /* gris claro */
+  --muted: #9ca3af; /* gris medio */
+  --accent: #4f46e5; /* índigo */
+  --accent-2: #6366f1; /* índigo claro */
+  --input-bg: #1f2937; /* fondo inputs */
+  --input-text: #e5e7eb;
+  --input-placeholder: #94a3b8;
+}
+
+/* Contenedor principal */
+.container {
+  display: flex;
+  flex-direction: column;
+  margin: 80px auto;
+  width: 620px;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  padding: 28px 24px 18px;
+  color: var(--text);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+/* Encabezado */
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+.text {
+  color: #93c5fd; /* título más luminoso */
+  font-size: 44px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+.underline {
+  width: 64px;
+  height: 5px;
+  background: var(--accent);
+  border-radius: 10px;
+  margin-top: 4px;
+}
+
+/* Selector Login / Sign Up */
+.mode-selector {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 28px;
+}
+.mode-button {
+  padding: 10px 22px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--muted);
+  background: #0b1220;
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.mode-button:hover {
+  color: var(--text);
+}
+.mode-button.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: transparent;
+}
+
+/* Inputs */
+.inputs {
+  margin-top: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.input {
+  display: flex;
+  align-items: center;
+  margin: 0 auto;
+  width: 520px;
+  height: 72px;
+  background: var(--input-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+}
+.input img {
+  margin: 0 22px;
+}
+.input input {
+  height: 48px;
+  width: 420px;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--input-text);
+  font-size: 18px;
+}
+.input input::placeholder {
+  color: var(--input-placeholder);
+}
+
+/* Link SOBRE el botón de registrarse */
+.switch-over-button {
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+  margin: 10px auto 6px auto; /* aparece justo ANTES del botón */
+}
+.bottom-link__cta {
+  color: #a5b4fc;
+  cursor: pointer;
+  font-weight: 700;
+}
+.bottom-link__cta:hover {
+  color: #c7d2fe;
+}
+
+/* Botón principal */
+.submit-container {
+  display: flex;
+  justify-content: center;
+  margin: 8px auto 12px auto;
+}
+.submit {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 240px;
+  height: 56px;
+  color: #fff;
+  background: var(--accent);
+  border: none;
+  border-radius: 999px;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.05s ease, background 0.2s ease;
+}
+.submit:hover {
+  background: var(--accent-2);
+}
+.submit:active {
+  transform: translateY(1px);
+}
+
+/* Enlace inferior en Login (recuperar contraseña) */
+.bottom-link {
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 6px;
+  margin-bottom: 6px;
+}
+
+/* Ajustes responsivos simples */
+@media (max-width: 680px) {
+  .container {
+    width: 92%;
+    padding: 22px 16px;
+  }
+  .input {
+    width: 100%;
+  }
+  .input input {
+    width: 100%;
+  }
+}

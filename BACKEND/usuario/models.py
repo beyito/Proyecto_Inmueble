@@ -1,5 +1,4 @@
 from django.db import models
-
 from django.contrib.auth.models import AbstractUser
 
 class Rol(models.Model):
@@ -20,6 +19,7 @@ class Usuario(AbstractUser):
     idRol = models.ForeignKey(Rol, on_delete=models.RESTRICT, db_column="idRol")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
 
     class Meta:
         db_table = "usuario"
