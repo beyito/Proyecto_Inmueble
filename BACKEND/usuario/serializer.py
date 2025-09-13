@@ -25,21 +25,24 @@ class ClienteSerializer(serializers.ModelSerializer):
         return usuario
     
     def update(self, instance, validated_data):
-        # Actualizar campos de Usuario
-        instance.nombre = validated_data.get('nombre', instance.nombre)
-        instance.correo = validated_data.get('correo', instance.correo)
+        # Actualizar campos de Usuario (PATCH → solo si vienen en el request)
+        instance.username = validated_data.get('username', instance.username)
+        instance.nombre   = validated_data.get('nombre', instance.nombre)
+        instance.correo   = validated_data.get('correo', instance.correo)
         instance.telefono = validated_data.get('telefono', instance.telefono)
-        instance.ubicacion = validated_data.get('ubicacion', instance.ubicacion)
+
+        # Manejo de password de forma segura
         password = validated_data.get('password', None)
         if password:
-            instance.password = password
+            instance.set_password(password)
+
         instance.save()
 
-        # Actualizar campos de Cliente
-        ubicacion = validated_data.get('ubicacion', None)
-        if hasattr(instance, 'cliente') and ubicacion is not None:
-            instance.cliente.ubicacion = ubicacion
-            instance.cliente.save()
+        if 'ubicacion' in validated_data:
+            ubicacion = validated_data.get('ubicacion')
+            cliente, _ = Cliente.objects.get_or_create(idUsuario=instance)
+            cliente.ubicacion = ubicacion
+            cliente.save()
 
         return instance
 

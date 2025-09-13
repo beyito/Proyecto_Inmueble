@@ -19,6 +19,8 @@ export default function AppSidebar({
   }, [user]);
 
   const [query, setQuery] = useState("");
+  const [showModal, setShowModal] = useState(false);
+
 
   const items = [
     {
@@ -50,7 +52,24 @@ export default function AppSidebar({
     >
       {/* Brand / avatar */}
       <div className="side-brand">
-        <div className="side-avatar">{initials[0]}</div>
+        <button
+            className="side-avatar"
+            onClick={() => setShowModal(true)}
+            title="Ver perfil"
+            style={{
+              background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
+              color: "#fff",
+              border: "none",
+              borderRadius: "50%",
+              width: 40,
+              height: 40,
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            {initials[0]}
+          </button>
+
         {!collapsed && (
           <div className="side-title">
             Inmo<span className="accent">biliaria</span>
@@ -98,7 +117,73 @@ export default function AppSidebar({
           </a>
         ))}
       </nav>
+              {showModal && (
+          <div
+            style={{
+              position: "fixed",
+              inset: 0,
+              backgroundColor: "rgba(0,0,0,0.4)",
+              zIndex: 9999,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <div
+              style={{
+                background: palette.cardBg,
+                color: palette.text,
+                padding: 24,
+                borderRadius: 12,
+                width: 360,
+                boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+              }}
+            >
+              <h2 style={{ marginTop: 0 }}>Mi perfil</h2>
+              <p><strong>Nombre:</strong> {user?.nombre}</p>
+              <p><strong>Correo:</strong> {user?.correo}</p>
+              <p><strong>Teléfono:</strong> {user?.telefono}</p>
+
+              <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 20 }}>
+                <button
+                  onClick={() => setShowModal(false)}
+                  style={{
+                    background: "#e5e7eb",
+                    color: "#111827",
+                    border: "none",
+                    borderRadius: 8,
+                    padding: "8px 16px",
+                    cursor: "pointer",
+                    fontWeight: 600,
+                    marginRight: 8,
+                  }}
+                >
+                  Cerrar
+                </button>
+                <button
+                  onClick={() => {
+                    setShowModal(false);
+                    window.location.href = "/usuario/editar"; // redirige
+                  }}
+                  style={{
+                    background: "#4f46e5",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: 8,
+                    padding: "8px 16px",
+                    cursor: "pointer",
+                    fontWeight: 600,
+                  }}
+                >
+                  Editar perfil
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
     </aside>
+    
   );
 }
 
