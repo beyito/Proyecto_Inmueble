@@ -5,9 +5,13 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework import status
-from .serializer import UsuarioSerializer, ClienteSerializer, AgenteSerializer
+from .serializer import UsuarioSerializer, ClienteSerializer, AgenteSerializer, PasswordResetRequestSerializer, PasswordResetVerifyCodeSerializer, SetNewPasswordSerializer
+from django.core.mail import send_mail
 from django.contrib.auth.models import User
 from .models import PasswordResetCode, Usuario, Cliente, Agente, PasswordResetCode
+from rest_framework.views import APIView
+from rest_framework.permissions import AllowAny
+from django.conf import settings
 
 # Create your views here.
 
