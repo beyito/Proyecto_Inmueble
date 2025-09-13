@@ -1,0 +1,103 @@
+/* src/components/Dashboard/AppSidebar.css */
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  transition: width 0.2s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.side-brand {
+  height: 64px;
+  display: grid;
+  grid-template-columns: 44px 1fr 32px;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 10px 12px 14px;
+}
+
+.side-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: #4f46e5;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-weight: 800;
+  box-shadow: 0 4px 18px rgba(79, 70, 229, 0.35);
+}
+
+.side-title {
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+.side-title .accent {
+  color: #93c5fd;
+}
+
+.side-burger {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.06);
+  color: #e5e7eb;
+  cursor: pointer;
+}
+
+.side-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 12px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.12);
+}
+.side-search input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: inherit;
+}
+.search-btn {
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.side-nav {
+  display: flex;
+  flex-direction: column;
+  margin-top: 6px;
+  padding: 4px;
+  gap: 4px;
+  overflow-y: auto;
+}
+.nav-item {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  align-items: center;
+  padding: 10px 10px;
+  border-radius: 10px;
+  text-decoration: none;
+  opacity: 0.92;
+}
+.nav-item:hover {
+  background: rgba(79, 70, 229, 0.12);
+  opacity: 1;
+}
+.nav-ic {
+  display: grid;
+  place-items: center;
+}
+.nav-label {
+  white-space: normal;
+  line-height: 1.25;
+}

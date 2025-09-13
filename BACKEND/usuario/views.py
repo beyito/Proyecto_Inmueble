@@ -8,6 +8,7 @@ from rest_framework import status
 from .serializer import UsuarioSerializer, ClienteSerializer, AgenteSerializer
 from django.contrib.auth.models import User
 from .models import Usuario, Cliente, Agente
+
 # Create your views here.
 
 @api_view(['POST']) 
@@ -48,6 +49,13 @@ def registerAgente(request):
         token = Token.objects.create(user=usuario)
         return Response({'token': token.key,"user": serializer.data}, status=status.HTTP_201_CREATED)    
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(["GET", "POST"])  # acepta ambos para no fallar por método
+@permission_classes([IsAuthenticated])
+def profile(request):
+    user = request.user
+    data = UsuarioSerializer(user).data
+    return Response(data, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
 @authentication_classes([TokenAuthentication])

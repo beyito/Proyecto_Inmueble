@@ -17,22 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
-from rest_framework.schemas import get_schema_view
-
-# from django.http import JsonResponse
-
-# def custom_404(request, exception=None):
-#     return JsonResponse(
-#         {"error": "La URL solicitada no existe"},
-#         status=404
-#     )
-
-schema_view = get_schema_view(title="Inmobiliaria API")
-
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('usuario/', include('usuario.urls')),
-    path('docs/', schema_view, name='openapi-schema'),
 ]
-
-# handler404 = custom_404
