@@ -5,9 +5,13 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework import status
-from .serializer import UsuarioSerializer, ClienteSerializer, AgenteSerializer
+from .serializer import UsuarioSerializer, ClienteSerializer, AgenteSerializer, PasswordResetRequestSerializer, PasswordResetVerifyCodeSerializer, SetNewPasswordSerializer
+from django.core.mail import send_mail
 from django.contrib.auth.models import User
-from .models import Usuario, Cliente, Agente
+from .models import PasswordResetCode, Usuario, Cliente, Agente, PasswordResetCode
+from rest_framework.views import APIView
+from rest_framework.permissions import AllowAny
+from django.conf import settings
 
 # Create your views here.
 
@@ -142,3 +146,82 @@ def mostrarUsuarios(request):
         "message": "USUARIOS OBTENIDOS",
         "values": serializer.data
     })
+
+class PasswordResetRequestView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = PasswordResetRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data['email']
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response({'error': 'No existe un usuario con este email'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Crear código de recuperación
+        reset_code = PasswordResetCode.objects.create(user=user)
+
+        # Enviar correo con el código
+        message = f"Hola {user.username}, tu código de recuperación es: {reset_code.code}\nVálido por 15 minutos."
+        send_mail(
+            subject="Código de recuperación de contraseña",
+            message=message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+        )
+
+        return Response({'message': 'Se ha enviado un código de recuperación a tu email'})
+
+class PasswordResetVerifyCodeView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = PasswordResetVerifyCodeSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data['email']
+        code = serializer.validated_data['code']
+
+        try:
+            user = User.objects.get(email=email)
+            reset_code = PasswordResetCode.objects.filter(user=user, code=code, is_used=False).last()
+            if not reset_code or not reset_code.is_valid():
+                return Response({'error': 'Código inválido o expirado'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Marcar como verificado
+            reset_code.is_verified = True
+            reset_code.save()
+
+            return Response({'message': 'Código verificado, ya puedes cambiar tu contraseña'})
+        except User.DoesNotExist:
+            return Response({'error': 'Usuario no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+
+class SetNewPasswordView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = SetNewPasswordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data['email']
+        new_password = serializer.validated_data['password']
+
+        try:
+            user = User.objects.get(email=email)
+            # Buscar el último código verificado
+            reset_code = PasswordResetCode.objects.filter(user=user, is_verified=True, is_used=False).last()
+            if not reset_code or not reset_code.is_valid():
+                return Response({'error': 'No tienes un código verificado válido'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Cambiar la contraseña
+            user.set_password(new_password)
+            user.save()
+
+            # Marcar el código como usado
+            reset_code.is_used = True
+            reset_code.save()
+
+            return Response({'message': 'Contraseña cambiada con éxito'})
+        except User.DoesNotExist:
+            return Response({'error': 'Usuario no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+

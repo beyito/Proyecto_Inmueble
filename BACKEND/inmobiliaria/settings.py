@@ -116,7 +116,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/La_Paz'
 
 USE_I18N = True
 
@@ -141,6 +141,19 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.TokenAuthentication",
     ],
 }
+
+
+#Email Settings
+# settings.py
+
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "sandbox.smtp.mailtrap.io"
+EMAIL_HOST_USER = "d4bbac28091f8e"
+EMAIL_HOST_PASSWORD = "241866b2e2649f"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+
+DEFAULT_FROM_EMAIL = "noreply@tuapp.com"
 
 #pip freeze > requirements.txt PARA GENERAR LISTA DE REQUIRIMIENTOS
 #pip install -r requirements.txt PARA INSTALAR LOS REQUIRIMIENTOS
