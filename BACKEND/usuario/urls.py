@@ -10,7 +10,8 @@ urlpatterns = [
     path('recuperacion-codigo-actualizar/', views.SetNewPasswordView.as_view(), name='recuperacion-codigo-actualizar'),
     path('recuperacion-codigo/', views.PasswordResetRequestView.as_view(), name='codigo-recuperacion'),
     path('recuperacion-codigo-confirmar/', views.PasswordResetVerifyCodeView.as_view(), name='recuperacion-codigo-confirmar'),
-    path('editarUsuario', views.actualizarUsuario, name='editarUsuario'), # Editar usuario
+    path("generarContratoPdf/", views.ContratoAgenteView.as_view(), name="generarContratoPdf"),
+    path('editarUsuario', views.actualizarUsuario, name='editarUsuario') # Editar usuario
 ]
 
 
