@@ -1,4 +1,5 @@
 from django.db import models
+
 from django.contrib.auth.models import AbstractUser
 
 class Rol(models.Model):
@@ -20,7 +21,15 @@ class Usuario(AbstractUser):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-
+    def es_cliente(self):
+        return self.idRol.nombre == "Cliente"
+    
+    def es_agente(self):
+        return self.idRol.nombre == "Agente"
+    
+    def es_admin(self):
+        return self.idRol.nombre == "Administrador"
+    
     class Meta:
         db_table = "usuario"
 

@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-=ho1+m-e7v&em6l97swgu32rk78+xv8o2z+4vz@f0s#kkfjqe1
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*', '10.0.2.2', 'localhost']
 
 AUTH_USER_MODEL = 'usuario.Usuario'
 
@@ -54,6 +54,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'inmobiliaria.middleware.JsonErrorMiddleware'
 ]
 
 ROOT_URLCONF = 'inmobiliaria.urls'
