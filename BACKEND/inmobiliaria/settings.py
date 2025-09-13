@@ -85,7 +85,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME':'inmobiliaria', # ponen el nombre de su base de datos de postgresql
         'USER':'postgres',
-        'PASSWORD':'CObuchan8', # su contraseña que usan para entrar a postgresql
+        'PASSWORD':'09101201', # su contraseña que usan para entrar a postgresql
         'HOST':'localhost',
         'PORT':'5432',
     }

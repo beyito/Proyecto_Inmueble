@@ -94,6 +94,18 @@ def registerAgente(request):
 def profile(request):
     user = request.user
     data = UsuarioSerializer(user).data
+    return Response(data, status=status.HTTP_200_OK)
+
+@api_view(['PATCH'])
+@authentication_classes([TokenAuthentication])  # ⬅️ FORZAMOS TokenAuth
+@permission_classes([IsAuthenticated])
+def update_usuario(request, pk):
+    usuario = get_object_or_404(Usuario, pk=pk)
+    serializer = UsuarioSerializer(usuario, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     return Response({
         "status": 1,
         "error": 0,
