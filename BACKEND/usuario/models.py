@@ -1,4 +1,5 @@
 from django.db import models
+
 from django.contrib.auth.models import AbstractUser
 
 class Rol(models.Model):
@@ -20,7 +21,15 @@ class Usuario(AbstractUser):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-
+    def es_cliente(self):
+        return self.idRol.nombre == "Cliente"
+    
+    def es_agente(self):
+        return self.idRol.nombre == "Agente"
+    
+    def es_admin(self):
+        return self.idRol.nombre == "Administrador"
+    
     class Meta:
         db_table = "usuario"
 
@@ -50,9 +59,9 @@ class Agente(models.Model):
         primary_key=True,
         db_column="id"
     )
-    numero_licencia = models.CharField(max_length=50, unique=True)
+    numero_licencia = models.CharField(max_length=50, unique=True, null=True, blank=True) # Número de licencia profesional
     experiencia = models.IntegerField(default=0) # Años de experiencia
-    puntaje = models.FloatField(default=0.0) # Puntaje promedio basado en reseñas
+    puntaje = models.FloatField(default=0.0, blank = True) # Puntaje promedio basado en reseñas
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     class Meta:

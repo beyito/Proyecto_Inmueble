@@ -42,10 +42,10 @@ const LoginSignup = () => {
           body: JSON.stringify(payload),
         });
         const data = await res.json();
-        if (!res.ok || !(data.token || data.key)) {
+        if (!res.ok || !(data.values.token || data.key)) {
           throw new Error(data.detail || JSON.stringify(data));
         }
-        localStorage.setItem("token", data.token || data.key);
+        localStorage.setItem("token", data.values.token || data.key);
         navigate("/dashboard");
         return;
       }
