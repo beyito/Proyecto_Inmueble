@@ -2,27 +2,28 @@ class UsuarioModel {
   final int? id;
   final String? username;
   final String? nombre;
-  final String? email;
+  final String? correo;
+  final String? telefono;
   final int? idRol;
-  final String? nombreRol;
 
   UsuarioModel({
     this.id,
     this.username,
     this.nombre,
-    this.email,
+    this.correo,
+    this.telefono,
     this.idRol,
-    this.nombreRol,
   });
 
   factory UsuarioModel.fromJson(Map<String, dynamic> json) {
+    final usuario = json['usuario'] ?? json;
     return UsuarioModel(
-      id: json['id'] ?? 0,
-      username: json['username'] ?? "",
-      nombre: json['nombre'] ?? "",
-      email: json['email'] ?? "",
-      idRol: json['idRol'] ?? 0,
-      nombreRol: json['nombreRol'] ?? "",
+      id: usuario['id'] ?? 0,
+      username: usuario['username'] ?? "",
+      nombre: usuario['nombre'] ?? "",
+      correo: usuario['correo'] ?? "",
+      telefono: usuario['telefono'] ?? "",
+      idRol: usuario['idRol'] ?? 0,
     );
   }
 
@@ -30,8 +31,7 @@ class UsuarioModel {
     'id': id,
     'username': username,
     'nombre': nombre,
-    'email': email,
+    'correo': correo,
     'idRol': idRol,
-    'nombreRol': nombreRol,
   };
 }
