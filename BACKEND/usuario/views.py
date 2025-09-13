@@ -15,14 +15,32 @@ from .models import Usuario, Cliente, Agente
 def login(request):
     try:
         usuario = get_object_or_404(Usuario, username=request.data['username'])
+        print(usuario)
     except:
-        return Response({"error": "USUARIO NO ENCONTRADO"}, status=status.HTTP_404_NOT_FOUND)
+        return Response({
+            "status": 2,
+            "error": 1,
+            "message": "USUARIO NO ENCONTRADO",
+            "values": None
+        })
+    
     if not usuario.check_password(request.data['password']):
-        return Response({"error": "CONTRASEÑA INCORRECTA"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({
+            "status": 2,
+            "error": 1,
+            "message": "CONTRASEÑA INCORRECTA",
+            "values": None
+        })
 
     token, created = Token.objects.get_or_create(user=usuario)
-    serializer = UsuarioSerializer(instance = usuario)
-    return Response({'token': token.key,"usuario": serializer.data}, status=status.HTTP_200_OK)
+    serializer = UsuarioSerializer(instance=usuario)
+    return Response({
+        "status": 1,
+        "error": 0,
+        "message": "LOGIN EXITOSO",
+        "values": {"token": token.key, "usuario": serializer.data}
+    },)
+
 
 @api_view(['POST']) 
 def register(request):
@@ -30,16 +48,33 @@ def register(request):
     if serializer.is_valid():
         usuario = ClienteSerializer.create(ClienteSerializer(), validated_data=serializer.validated_data)
         token = Token.objects.create(user=usuario)
-        return Response({'token': token.key,"user": serializer.data}, status=status.HTTP_201_CREATED)
+        return Response({
+            "status": 1,
+            "error": 0,
+            "message": "REGISTRO EXITOSO",
+            "values": {"token": token.key, "user": serializer.data}
+        })
     
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    return Response({
+        "status": 2,
+        "error": 1,
+        "message": "ERROR EN EL REGISTRO",
+        "values": serializer.errors
+    })
+
 
 @api_view(['POST'])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def profile(request):
-    usuario = UsuarioSerializer(instance = request.user)
-    return Response (usuario.data, status=status.HTTP_200_OK)
+    usuario = UsuarioSerializer(instance=request.user)
+    return Response({
+        "status": 1,
+        "error": 0,
+        "message": "PERFIL OBTENIDO",
+        "values": usuario.data
+    }, status=status.HTTP_200_OK)
+
 
 @api_view(['POST'])
 def registerAgente(request):
@@ -47,24 +82,51 @@ def registerAgente(request):
     if serializer.is_valid():
         usuario = AgenteSerializer.create(AgenteSerializer(), validated_data=serializer.validated_data)
         token = Token.objects.create(user=usuario)
-        return Response({'token': token.key,"user": serializer.data}, status=status.HTTP_201_CREATED)    
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response({
+            "status": 1,
+            "error": 0,
+            "message": "REGISTRO DE AGENTE EXITOSO",
+            "values": {"token": token.key, "user": serializer.data}
+        })    
+    
+    return Response({
+        "status": 2,
+        "error": 1,
+        "message": "ERROR EN EL REGISTRO DE AGENTE",
+        "values": serializer.errors
+    })
 
-@api_view(["GET", "POST"])  # acepta ambos para no fallar por método
+
+@api_view(["GET", "POST"])  
 @permission_classes([IsAuthenticated])
 def profile(request):
     user = request.user
     data = UsuarioSerializer(user).data
-    return Response(data, status=status.HTTP_200_OK)
+    return Response({
+        "status": 1,
+        "error": 0,
+        "message": "PERFIL OBTENIDO",
+        "values": data
+    }, status=status.HTTP_200_OK)
+
 
 @api_view(['GET'])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def mostrarUsuarios(request):
-    print(request.user.idRol)
-    if not request.user.es_cliente():  # Verifica si el usuario no es administrador
-        return Response({"error": "No tienes permiso para ver los usuarios."}, status=status.HTTP_403_FORBIDDEN)
+    if not request.user.es_cliente():  
+        return Response({
+            "status": 2,
+            "error": 1,
+            "message": "NO TIENES PERMISO PARA VER LOS USUARIOS",
+            "values": None
+        }, status=status.HTTP_403_FORBIDDEN)
     
     usuarios = Usuario.objects.all()
     serializer = UsuarioSerializer(usuarios, many=True)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+    return Response({
+        "status": 1,
+        "error": 0,
+        "message": "USUARIOS OBTENIDOS",
+        "values": serializer.data
+    })

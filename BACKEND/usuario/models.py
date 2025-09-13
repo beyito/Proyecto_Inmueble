@@ -59,9 +59,9 @@ class Agente(models.Model):
         primary_key=True,
         db_column="id"
     )
-    numero_licencia = models.CharField(max_length=50, unique=True)
+    numero_licencia = models.CharField(max_length=50, unique=True, null=True, blank=True) # Número de licencia profesional
     experiencia = models.IntegerField(default=0) # Años de experiencia
-    puntaje = models.FloatField(default=0.0) # Puntaje promedio basado en reseñas
+    puntaje = models.FloatField(default=0.0, blank = True) # Puntaje promedio basado en reseñas
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     class Meta:

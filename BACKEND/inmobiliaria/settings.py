@@ -85,7 +85,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME':'inmobiliaria', # ponen el nombre de su base de datos de postgresql
         'USER':'postgres',
-        'PASSWORD':'KevinAntonio', # su contraseña que usan para entrar a postgresql
+        'PASSWORD':'CObuchan8', # su contraseña que usan para entrar a postgresql
         'HOST':'localhost',
         'PORT':'5432',
     }
@@ -141,3 +141,6 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.TokenAuthentication",
     ],
 }
+
+#pip freeze > requirements.txt PARA GENERAR LISTA DE REQUIRIMIENTOS
+#pip install -r requirements.txt PARA INSTALAR LOS REQUIRIMIENTOS
