@@ -32,16 +32,17 @@ class AuthService {
 
       if (data['status'] == 1) {
         final values = data['values'];
+        final user = UsuarioModel.fromJson(values);
         // Guardar token localmente
         final prefs = await SharedPreferences.getInstance();
-        final id = values['id'];
-        final token = values['access'];
-        final usuario = values["username"];
-        final rol = values["rol"];
+        final id = user.id ?? 0;
+        final token = values['token'];
+        final usuario = user.username ?? '';
+        final rol = user.idRol ?? 0;
 
         await prefs.setString('token', token);
         await prefs.setInt('id', id);
-        await prefs.setString('rol', rol);
+        await prefs.setInt('rol', rol);
         await prefs.setString('username', usuario ?? '');
 
         return LoginResponse.success(token: token, id: id, usuario: usuario);
