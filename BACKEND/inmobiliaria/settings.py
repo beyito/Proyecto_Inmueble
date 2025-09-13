@@ -38,7 +38,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
     'corsheaders',
     'usuario',
     'rest_framework',
@@ -58,11 +57,11 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'inmobiliaria.urls'
-
+import os
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, "usuario/contratoPDF")],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -85,7 +84,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME':'inmobiliaria', # ponen el nombre de su base de datos de postgresql
         'USER':'postgres',
-        'PASSWORD':'CObuchan8', # su contraseña que usan para entrar a postgresql
+        'PASSWORD':'password', # su contraseña que usan para entrar a postgresql
         'HOST':'localhost',
         'PORT':'5432',
     }

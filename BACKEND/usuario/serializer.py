@@ -82,12 +82,14 @@ class AgenteSerializer(serializers.ModelSerializer):
         return instance
 
 class PasswordResetRequestSerializer(serializers.Serializer):
-    email = serializers.EmailField()
+    correo = serializers.EmailField()
+
 
 class PasswordResetVerifyCodeSerializer(serializers.Serializer):
-    email = serializers.EmailField()
+    correo = serializers.EmailField()
     code = serializers.CharField(max_length=6)
 
+
 class SetNewPasswordSerializer(serializers.Serializer):
-    email = serializers.EmailField()
+    correo = serializers.EmailField()
     password = serializers.CharField(min_length=6, write_only=True)
