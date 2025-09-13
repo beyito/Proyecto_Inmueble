@@ -11,7 +11,14 @@ from django.contrib.auth.models import User
 from .models import PasswordResetCode, Usuario, Cliente, Agente, PasswordResetCode
 from rest_framework.views import APIView
 from django.conf import settings
-
+from reportlab.lib.pagesizes import LETTER
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, HRFlowable
+from reportlab.lib.enums import TA_JUSTIFY, TA_CENTER
+from reportlab.lib import colors
+from django.http import HttpResponse
+import os
+import io
 # Create your views here.
 
 @api_view(['POST']) 
@@ -134,18 +141,124 @@ def mostrarUsuarios(request):
         "values": serializer.data
     })
 
+
+class ContratoAgenteView(APIView):
+    def post(self, request):
+        data = request.data
+
+        # Ruta del archivo de plantilla
+        plantilla_path = os.path.join(settings.BASE_DIR, "usuario/contratoPDF/contrato_agente.txt")
+        with open(plantilla_path, "r", encoding="utf-8") as f:
+            contrato_text = f.read()
+
+        # Reemplazar variables
+        contrato_text = contrato_text.format(
+            ciudad=data.get("ciudad", "________________"),
+            fecha=data.get("fecha", "____/____/______"),
+            inmobiliaria_nombre=data.get("inmobiliaria_nombre", "________________"),
+            inmobiliaria_direccion=data.get("inmobiliaria_direccion", "________________"),
+            inmobiliaria_representante=data.get("inmobiliaria_representante", "________________"),
+            agente_nombre=data.get("agente_nombre", "________________"),
+            agente_direccion=data.get("agente_direccion", "________________"),
+            agente_ci=data.get("agente_ci", "________________"),
+            agente_licencia=data.get("agente_licencia", "________________"),
+            comision=data.get("comision", "____"),
+            duracion=data.get("duracion", "____"),
+        )
+
+        # Crear buffer en memoria
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(
+            buffer,
+            pagesize=LETTER,
+            rightMargin=50,
+            leftMargin=50,
+            topMargin=50,
+            bottomMargin=50
+        )
+
+        # Estilos
+        styles = getSampleStyleSheet()
+        titulo_style = ParagraphStyle(
+            'Titulo',
+            fontSize=18,
+            leading=22,
+            alignment=TA_CENTER,
+            spaceAfter=20,
+            textColor=colors.darkblue,
+        )
+        clausula_style = ParagraphStyle(
+            'Clausula',
+            fontSize=12,
+            leading=18,
+            alignment=TA_JUSTIFY,
+        )
+        firma_style = ParagraphStyle(
+            'Firma',
+            fontSize=12,
+            leading=6,
+            alignment=TA_CENTER,
+        )
+
+        story = []
+
+        # Título
+        story.append(Paragraph("CONTRATO DE VINCULACIÓN INMOBILIARIA", titulo_style))
+        story.append(Spacer(1, 10))
+
+        # Separar por párrafos usando doble salto de línea
+        lineas = contrato_text.strip().split("\n\n")
+
+        # Última línea que dice "Las partes aceptan..."
+        aceptacion_texto = lineas[-1]
+        clausulas = lineas[:-1]
+
+        # Agregar cláusulas con separador
+        for i, p in enumerate(clausulas):
+            story.append(Paragraph(p.strip(), clausula_style))
+            if i != len(clausulas) - 1:
+                story.append(Spacer(1, 6))
+                story.append(HRFlowable(width="100%", thickness=0.5, color=colors.grey))
+                story.append(Spacer(1, 6))
+
+        # Frase de aceptación
+        story.append(Spacer(1, 6))
+        story.append(Paragraph(aceptacion_texto.strip(), clausula_style))
+        # Firmas compactas
+        firmas_texto = f"""__________________________  <br/><br/><br/>
+        INMOBILIARIA ({data.get('inmobiliaria_nombre','________')})<br/><br/>
+        __________________________  <br/><br/><br/>
+        AGENTE INMOBILIARIO ({data.get('agente_nombre','________')})
+        """
+        story.append(Paragraph(firmas_texto, firma_style))
+
+        # Generar PDF
+        doc.build(story)
+        buffer.seek(0)
+
+        # Devolver PDF
+        response = HttpResponse(buffer, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="contrato_{data.get("agente_nombre","agente")}.pdf"'
+        return response
+
+
 class PasswordResetRequestView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
         serializer = PasswordResetRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        email = serializer.validated_data['email']
+        correo = serializer.validated_data['correo']
 
         try:
-            user = User.objects.get(email=email)
-        except User.DoesNotExist:
-            return Response({'error': 'No existe un usuario con este email'}, status=status.HTTP_404_NOT_FOUND)
+            user = Usuario.objects.get(correo=correo)
+        except Usuario.DoesNotExist:
+            return Response({
+                "status": 2,
+                "error": 1,
+                "message": "USUARIO NO ENCONTRADO",
+                "values": None
+            }, status=status.HTTP_404_NOT_FOUND)
 
         # Crear código de recuperación
         reset_code = PasswordResetCode.objects.create(user=user)
@@ -156,10 +269,16 @@ class PasswordResetRequestView(APIView):
             subject="Código de recuperación de contraseña",
             message=message,
             from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[user.email],
+            recipient_list=[user.correo],
         )
 
-        return Response({'message': 'Se ha enviado un código de recuperación a tu email'})
+        return Response({
+            "status": 1,
+            "error": 0,
+            "message": "CÓDIGO DE RECUPERACIÓN ENVIADO",
+            "values": {"correo": user.correo}
+        })
+
 
 class PasswordResetVerifyCodeView(APIView):
     permission_classes = [AllowAny]
@@ -167,22 +286,38 @@ class PasswordResetVerifyCodeView(APIView):
     def post(self, request):
         serializer = PasswordResetVerifyCodeSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        email = serializer.validated_data['email']
+        correo = serializer.validated_data['correo']
         code = serializer.validated_data['code']
 
         try:
-            user = User.objects.get(email=email)
+            user = Usuario.objects.get(correo=correo)
             reset_code = PasswordResetCode.objects.filter(user=user, code=code, is_used=False).last()
             if not reset_code or not reset_code.is_valid():
-                return Response({'error': 'Código inválido o expirado'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({
+                    "status": 2,
+                    "error": 1,
+                    "message": "CÓDIGO INVÁLIDO O EXPIRADO",
+                    "values": None
+                }, status=status.HTTP_400_BAD_REQUEST)
 
             # Marcar como verificado
             reset_code.is_verified = True
             reset_code.save()
 
-            return Response({'message': 'Código verificado, ya puedes cambiar tu contraseña'})
-        except User.DoesNotExist:
-            return Response({'error': 'Usuario no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({
+                "status": 1,
+                "error": 0,
+                "message": "CÓDIGO VERIFICADO, YA PUEDES CAMBIAR TU CONTRASEÑA",
+                "values": {"correo": user.correo, "code": reset_code.code}
+            })
+        except Usuario.DoesNotExist:
+            return Response({
+                "status": 2,
+                "error": 1,
+                "message": "USUARIO NO ENCONTRADO",
+                "values": None
+            }, status=status.HTTP_404_NOT_FOUND)
+
 
 class SetNewPasswordView(APIView):
     permission_classes = [AllowAny]
@@ -190,15 +325,20 @@ class SetNewPasswordView(APIView):
     def post(self, request):
         serializer = SetNewPasswordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        email = serializer.validated_data['email']
+        correo = serializer.validated_data['correo']
         new_password = serializer.validated_data['password']
 
         try:
-            user = User.objects.get(email=email)
+            user = Usuario.objects.get(correo=correo)
             # Buscar el último código verificado
             reset_code = PasswordResetCode.objects.filter(user=user, is_verified=True, is_used=False).last()
             if not reset_code or not reset_code.is_valid():
-                return Response({'error': 'No tienes un código verificado válido'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({
+                    "status": 2,
+                    "error": 1,
+                    "message": "NO TIENES UN CÓDIGO VERIFICADO VÁLIDO",
+                    "values": None
+                }, status=status.HTTP_400_BAD_REQUEST)
 
             # Cambiar la contraseña
             user.set_password(new_password)
@@ -208,9 +348,20 @@ class SetNewPasswordView(APIView):
             reset_code.is_used = True
             reset_code.save()
 
-            return Response({'message': 'Contraseña cambiada con éxito'})
-        except User.DoesNotExist:
-            return Response({'error': 'Usuario no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({
+                "status": 1,
+                "error": 0,
+                "message": "CONTRASEÑA CAMBIADA CON ÉXITO",
+                "values": {"correo": user.correo}
+            })
+        except Usuario.DoesNotExist:
+            return Response({
+                "status": 2,
+                "error": 1,
+                "message": "USUARIO NO ENCONTRADO",
+                "values": None
+            }, status=status.HTTP_404_NOT_FOUND)
+
 
 @api_view(['PUT'])
 @authentication_classes([TokenAuthentication])
