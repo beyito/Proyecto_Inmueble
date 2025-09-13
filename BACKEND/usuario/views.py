@@ -1,34 +1,46 @@
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view,authentication_classes,permission_classes 
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from django.core.mail import send_mail
-from django.contrib.auth import get_user_model
-from django.conf import settings
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework import status
-from .serializer import UsuarioSerializer, ClienteSerializer, AgenteSerializer, SetNewPasswordSerializer, PasswordResetVerifyCodeSerializer, PasswordResetRequestSerializer
+from .serializer import UsuarioSerializer, ClienteSerializer, AgenteSerializer
 from django.contrib.auth.models import User
 from .models import PasswordResetCode, Usuario, Cliente, Agente, PasswordResetCode
-# Create your views here.
 
-User = get_user_model()
+# Create your views here.
 
 @api_view(['POST']) 
 def login(request):
     try:
         usuario = get_object_or_404(Usuario, username=request.data['username'])
+        print(usuario)
     except:
-        return Response({"error": "USUARIO NO ENCONTRADO"}, status=status.HTTP_404_NOT_FOUND)
+        return Response({
+            "status": 2,
+            "error": 1,
+            "message": "USUARIO NO ENCONTRADO",
+            "values": None
+        })
+    
     if not usuario.check_password(request.data['password']):
-        return Response({"error": "CONTRASEÑA INCORRECTA"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({
+            "status": 2,
+            "error": 1,
+            "message": "CONTRASEÑA INCORRECTA",
+            "values": None
+        })
 
     token, created = Token.objects.get_or_create(user=usuario)
-    serializer = UsuarioSerializer(instance = usuario)
-    return Response({'token': token.key,"usuario": serializer.data}, status=status.HTTP_200_OK)
+    serializer = UsuarioSerializer(instance=usuario)
+    return Response({
+        "status": 1,
+        "error": 0,
+        "message": "LOGIN EXITOSO",
+        "values": {"token": token.key, "usuario": serializer.data}
+    },)
+
 
 @api_view(['POST']) 
 def register(request):
@@ -36,16 +48,33 @@ def register(request):
     if serializer.is_valid():
         usuario = ClienteSerializer.create(ClienteSerializer(), validated_data=serializer.validated_data)
         token = Token.objects.create(user=usuario)
-        return Response({'token': token.key,"user": serializer.data}, status=status.HTTP_201_CREATED)
+        return Response({
+            "status": 1,
+            "error": 0,
+            "message": "REGISTRO EXITOSO",
+            "values": {"token": token.key, "user": serializer.data}
+        })
     
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    return Response({
+        "status": 2,
+        "error": 1,
+        "message": "ERROR EN EL REGISTRO",
+        "values": serializer.errors
+    })
+
 
 @api_view(['POST'])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def profile(request):
-    usuario = UsuarioSerializer(instance = request.user)
-    return Response (usuario.data, status=status.HTTP_200_OK)
+    usuario = UsuarioSerializer(instance=request.user)
+    return Response({
+        "status": 1,
+        "error": 0,
+        "message": "PERFIL OBTENIDO",
+        "values": usuario.data
+    }, status=status.HTTP_200_OK)
+
 
 @api_view(['POST'])
 def registerAgente(request):
@@ -53,8 +82,54 @@ def registerAgente(request):
     if serializer.is_valid():
         usuario = AgenteSerializer.create(AgenteSerializer(), validated_data=serializer.validated_data)
         token = Token.objects.create(user=usuario)
-        return Response({'token': token.key,"user": serializer.data}, status=status.HTTP_201_CREATED)    
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response({
+            "status": 1,
+            "error": 0,
+            "message": "REGISTRO DE AGENTE EXITOSO",
+            "values": {"token": token.key, "user": serializer.data}
+        })    
+    
+    return Response({
+        "status": 2,
+        "error": 1,
+        "message": "ERROR EN EL REGISTRO DE AGENTE",
+        "values": serializer.errors
+    })
+
+
+@api_view(["GET", "POST"])  
+@permission_classes([IsAuthenticated])
+def profile(request):
+    user = request.user
+    data = UsuarioSerializer(user).data
+    return Response({
+        "status": 1,
+        "error": 0,
+        "message": "PERFIL OBTENIDO",
+        "values": data
+    }, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def mostrarUsuarios(request):
+    if not request.user.es_cliente():  
+        return Response({
+            "status": 2,
+            "error": 1,
+            "message": "NO TIENES PERMISO PARA VER LOS USUARIOS",
+            "values": None
+        }, status=status.HTTP_403_FORBIDDEN)
+    
+    usuarios = Usuario.objects.all()
+    serializer = UsuarioSerializer(usuarios, many=True)
+    return Response({
+        "status": 1,
+        "error": 0,
+        "message": "USUARIOS OBTENIDOS",
+        "values": serializer.data
+    })
 
 class PasswordResetRequestView(APIView):
     permission_classes = [AllowAny]
@@ -133,3 +208,4 @@ class SetNewPasswordView(APIView):
             return Response({'message': 'Contraseña cambiada con éxito'})
         except User.DoesNotExist:
             return Response({'error': 'Usuario no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+
