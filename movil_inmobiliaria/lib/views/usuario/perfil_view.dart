@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
+import 'editarPerfil_view.dart';
 import 'dart:convert';
 
 class PerfilView extends StatefulWidget {
@@ -37,7 +38,7 @@ class _PerfilViewState extends State<PerfilView> {
 
       final response = await http.get(
         Uri.parse(
-          "http://10.0.2.2:8000/usuario/profile",
+          "http://10.0.2.2:8000/usuario/profile/",
         ), // 👈 Ajusta la ruta a la de tu backend
         headers: {
           'Content-Type': 'application/json',
@@ -77,13 +78,12 @@ class _PerfilViewState extends State<PerfilView> {
             icon: const Icon(Icons.edit),
             tooltip: "Editar perfil",
             onPressed: () {
-              // Aquí vas a la pantalla de edición
-              // Navigator.push(
-              //   context,
-              //   MaterialPageRoute(
-              //     builder: (context) => EditProfilePage(userData: userData),
-              //   ),
-              // );
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => EditProfilePage(userData: userData),
+                ),
+              );
             },
           ),
         ],
