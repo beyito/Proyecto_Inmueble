@@ -37,11 +37,11 @@ class _PerfilViewState extends State<PerfilView> {
 
       final response = await http.get(
         Uri.parse(
-          "http://10.0.2.2:8000/usuario/perfil",
+          "http://10.0.2.2:8000/usuario/profile",
         ), // 👈 Ajusta la ruta a la de tu backend
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
+          'Authorization': 'Token $token',
         },
       );
 
@@ -114,11 +114,11 @@ class _PerfilViewState extends State<PerfilView> {
                           Divider(),
                           _buildField("CI", userData?['ci']),
                           Divider(),
-                          _buildField("Correo", userData?['email']),
+                          _buildField("Correo", userData?['correo']),
                           Divider(),
                           _buildField("Teléfono", userData?['telefono']),
                           Divider(),
-                          _buildField("Rol", userData?['rol']),
+                          _buildField("Rol", userData?['rolNombre']),
                         ],
                       ),
                     ),

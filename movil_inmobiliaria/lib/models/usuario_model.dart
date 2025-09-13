@@ -5,6 +5,8 @@ class UsuarioModel {
   final String? correo;
   final String? telefono;
   final int? idRol;
+  final String? rolNombre;
+  final String? ci;
 
   UsuarioModel({
     this.id,
@@ -13,6 +15,8 @@ class UsuarioModel {
     this.correo,
     this.telefono,
     this.idRol,
+    this.rolNombre,
+    this.ci,
   });
 
   factory UsuarioModel.fromJson(Map<String, dynamic> json) {
@@ -24,6 +28,8 @@ class UsuarioModel {
       correo: usuario['correo'] ?? "",
       telefono: usuario['telefono'] ?? "",
       idRol: usuario['idRol'] ?? 0,
+      rolNombre: usuario['rolNombre'] ?? "",
+      ci: usuario['ci'] ?? "",
     );
   }
 
@@ -33,5 +39,8 @@ class UsuarioModel {
     'nombre': nombre,
     'correo': correo,
     'idRol': idRol,
+    'rolNombre': rolNombre,
+    'telefono': telefono,
+    'ci': ci,
   };
 }

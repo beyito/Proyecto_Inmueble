@@ -4,9 +4,10 @@ from .models import Usuario, Cliente, Agente
 
 
 class UsuarioSerializer(serializers.ModelSerializer):
+    rolNombre = serializers.CharField(source='idRol.nombre', read_only=True)
     class Meta:
         model = Usuario
-        fields = ['id', 'username', 'nombre', 'correo', 'telefono', 'idRol', 'password']
+        fields = ['id', 'username', 'nombre', 'correo', 'telefono', 'idRol','ci', 'rolNombre', 'password']
 
 
 class ClienteSerializer(serializers.ModelSerializer):
@@ -30,16 +31,16 @@ class ClienteSerializer(serializers.ModelSerializer):
         instance.nombre = validated_data.get('nombre', instance.nombre)
         instance.correo = validated_data.get('correo', instance.correo)
         instance.telefono = validated_data.get('telefono', instance.telefono)
-        instance.ubicacion = validated_data.get('ubicacion', instance.ubicacion)
+        instance.ci = validated_data.get('ci', instance.ci)
         password = validated_data.get('password', None)
         if password:
-            instance.password = password
+            self.password = password
+            instance.set_password(self.password)
         instance.save()
 
-        # Actualizar campos de Cliente
-        ubicacion = validated_data.get('ubicacion', None)
-        if hasattr(instance, 'cliente') and ubicacion is not None:
-            instance.cliente.ubicacion = ubicacion
+        # Actualizar campos de Agente
+        if hasattr(instance, 'cliente'):
+            instance.cliente.ubicacion = validated_data.get('ubicacion', instance.cliente.ubicacion)
             instance.cliente.save()
 
         return instance
@@ -65,12 +66,15 @@ class AgenteSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         # Actualizar campos de Usuario
+
         instance.nombre = validated_data.get('nombre', instance.nombre)
         instance.correo = validated_data.get('correo', instance.correo)
         instance.telefono = validated_data.get('telefono', instance.telefono)
+        instance.ci = validated_data.get('ci', instance.ci)
         password = validated_data.get('password', None)
         if password:
-            instance.password = password
+            self.password = password
+            instance.set_password(self.password)
         instance.save()
 
         # Actualizar campos de Agente

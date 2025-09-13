@@ -75,3 +75,8 @@ htmlcov/
 
 # 3) ...pero conserva el _init_.py
 !**/migrations/_init_.py
+
+# Ignorar carpetas __pycache__ y archivos .pyc
+__pycache__/
+*.py[cod]
+*.cpython-*.pyc
