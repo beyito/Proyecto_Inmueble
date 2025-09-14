@@ -53,21 +53,111 @@ def login(request):
     },)
 
 
-@api_view(['POST']) 
+@api_view(['POST'])
 def register(request):
-    serializer = ClienteSerializer(data=request.data)          # ← sin setear idRol
+    """
+    Registro de usuario:
+    - Por defecto crea Cliente (idRol=2).
+    - Si se envía idRol:
+        * 1 = Administrador  → permitido SIEMPRE (incluso si ya existen admins).
+        * 2 = Cliente         → permitido siempre.
+        * 3 = Agente u otros  → si YA hay admins, exige que quien llama sea Admin/Superuser.
+    """
+    from .models import Rol, Usuario  # por si no están importados arriba
+    from rest_framework.authtoken.models import Token
+
+    data = request.data.copy()  # QueryDict -> mutable
+
+    # --- Resolver roles base ---
+    try:
+        rol_cliente = Rol.objects.get(idRol=2)
+    except Rol.DoesNotExist:
+        rol_cliente = Rol.objects.filter(nombre__iexact="Cliente").first()
+
+    try:
+        rol_admin = Rol.objects.get(idRol=1)
+    except Rol.DoesNotExist:
+        rol_admin = Rol.objects.filter(nombre__iexact="Administrador").first()
+
+    if not rol_cliente:
+        return Response({
+            "status": 2, "error": 1,
+            "message": "No existe el rol 'Cliente' (id 2).",
+            "values": None
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    # ¿Pidieron un rol explícito?
+    requested_idrol = data.get("idRol", None)
+    admins_exist = Usuario.objects.filter(idRol__nombre__iexact="Administrador").exists()
+
+    def set_cliente():
+        data["idRol"] = rol_cliente.idRol
+
+    if requested_idrol is None:
+        # Sin idRol -> por defecto Cliente
+        set_cliente()
+    else:
+        # Normalizar a int si viene como string
+        try:
+            requested_idrol = int(requested_idrol)
+        except (TypeError, ValueError):
+            return Response({
+                "status": 2, "error": 1,
+                "message": "idRol inválido.",
+                "values": None
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Si es explícitamente Cliente
+        if requested_idrol == (rol_cliente.idRol if rol_cliente else 2):
+            set_cliente()
+        else:
+            # --- NUEVA REGLA: permitir crear ADMIN siempre (idRol == 1) ---
+            if rol_admin and requested_idrol == rol_admin.idRol or requested_idrol == 1:
+                data["idRol"] = requested_idrol  # permitir aunque ya existan admins
+            else:
+                # Para otros roles ≠ Cliente, si YA hay admins, exigir Admin/Superuser autenticado
+                if admins_exist:
+                    user = request.user
+                    es_admin_o_super = getattr(user, "is_authenticated", False) and (
+                        (hasattr(user, "es_admin") and user.es_admin()) or user.is_superuser
+                    )
+                    if not es_admin_o_super:
+                        return Response({
+                            "status": 2, "error": 1,
+                            "message": "No autorizado para asignar roles distintos de 'Cliente'.",
+                            "values": None
+                        }, status=status.HTTP_403_FORBIDDEN)
+                data["idRol"] = requested_idrol
+
+    # No queremos crear Cliente() asociado si mandan 'ubicacion' por accidente al crear Admin u otro rol
+    if "ubicacion" in data and int(data["idRol"]) != (rol_cliente.idRol if rol_cliente else 2):
+        data.pop("ubicacion")
+
+    serializer = ClienteSerializer(data=data)
     if serializer.is_valid():
-        usuario = serializer.save()                            # ← usa create del serializer (rol fijo)
+        usuario = serializer.save()  # usa create del serializer (hashea password)
+        # Si es Admin, darle acceso al /admin de Django
+        try:
+            if rol_admin and usuario.idRol_id == rol_admin.idRol:
+                usuario.is_staff = True
+                usuario.save()
+        except Exception:
+            pass
+
         token = Token.objects.create(user=usuario)
         return Response({
             "status": 1,
             "error": 0,
             "message": "REGISTRO EXITOSO",
             "values": {"token": token.key, "user": UsuarioSerializer(usuario).data}
-        })
-    ...
+        }, status=status.HTTP_201_CREATED)
 
-
+    return Response({
+        "status": 2,
+        "error": 1,
+        "message": "ERROR EN EL REGISTRO",
+        "values": serializer.errors
+    }, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])
