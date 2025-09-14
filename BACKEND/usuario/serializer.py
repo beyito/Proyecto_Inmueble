@@ -8,11 +8,13 @@ class UsuarioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Usuario
         fields = ['id', 'username', 'nombre', 'correo', 'telefono', 'idRol','ci', 'rolNombre', 'password']
-
+        extra_kwargs = {
+            'password': {'write_only': True, 'required': False}
+        }
 
 class ClienteSerializer(serializers.ModelSerializer):
     ubicacion = serializers.CharField(write_only=True, required=False)  # campo extra solo para el serializer
-
+    password = serializers.CharField(write_only=True)
     class Meta:
         model = Usuario
         fields = ['username', 'nombre', 'correo', 'telefono', 'ubicacion', 'password', 'idRol']

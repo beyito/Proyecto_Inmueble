@@ -83,9 +83,9 @@ WSGI_APPLICATION = 'inmobiliaria.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME':'inmobiliaria', # ponen el nombre de su base de datos de postgresql
+        'NAME':'inmobiliaria_v1', # ponen el nombre de su base de datos de postgresql
         'USER':'postgres',
-        'PASSWORD':'09101201', # su contraseña que usan para entrar a postgresql
+        'PASSWORD':'h0l4c0m03st4s', # su contraseña que usan para entrar a postgresql
         'HOST':'localhost',
         'PORT':'5432',
     }
@@ -148,8 +148,8 @@ REST_FRAMEWORK = {
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "sandbox.smtp.mailtrap.io"
-EMAIL_HOST_USER = "d4bbac28091f8e"
-EMAIL_HOST_PASSWORD = "241866b2e2649f"
+EMAIL_HOST_USER = "f628c253236eb9"
+EMAIL_HOST_PASSWORD = "ff4e8092e9acb8"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 
