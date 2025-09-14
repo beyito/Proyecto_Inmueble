@@ -5,7 +5,7 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework import status
-from .serializer import UsuarioSerializer, ClienteSerializer, AgenteSerializer, PasswordResetRequestSerializer, PasswordResetVerifyCodeSerializer, SetNewPasswordSerializer,Rol,RolSerializer
+from .serializer import UsuarioSerializer, ClienteSerializer, AgenteSerializer, PasswordResetRequestSerializer, PasswordResetVerifyCodeSerializer, SetNewPasswordSerializer
 from django.core.mail import send_mail
 from django.contrib.auth.models import User
 from .models import PasswordResetCode, Usuario, Cliente, Agente, PasswordResetCode
@@ -159,20 +159,50 @@ def register(request):
         "values": serializer.errors
     }, status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(['POST']) 
+def registerCliente(request):
+    request.data['idRol'] = 2  # Asignar rol de Cliente (id=3)
+    serializer = ClienteSerializer(data=request.data)
+    if serializer.is_valid():
+        usuario = ClienteSerializer.create(ClienteSerializer(), validated_data=serializer.validated_data)
+        token = Token.objects.create(user=usuario)
+        return Response({
+            "status": 1,
+            "error": 0,
+            "message": "REGISTRO EXITOSO",
+            "values": {"token": token.key, "user": serializer.data}
+        })
+
+    return Response({
+        "status": 2,
+        "error": 1,
+        "message": "ERROR EN EL REGISTRO",
+        "values": serializer.errors
+    })
+
+
+
 
 @api_view(['POST'])
 def registerAgente(request):
-    serializer = AgenteSerializer(data=request.data)           # ← sin setear idRol
+    request.data['idRol'] = 3 
+    serializer = AgenteSerializer(data=request.data)
     if serializer.is_valid():
-        usuario = serializer.save()                            # ← usa create del serializer (rol fijo)
+        usuario = AgenteSerializer.create(AgenteSerializer(), validated_data=serializer.validated_data)
         token = Token.objects.create(user=usuario)
         return Response({
             "status": 1,
             "error": 0,
             "message": "REGISTRO DE AGENTE EXITOSO",
-            "values": {"token": token.key, "user": UsuarioSerializer(usuario).data}
+            "values": {"token": token.key, "user": serializer.data}
         })    
-    ...
+
+    return Response({
+        "status": 2,
+        "error": 1,
+        "message": "ERROR EN EL REGISTRO DE AGENTE",
+        "values": serializer.errors
+    })
 
 
 @api_view(["GET", "POST"])  

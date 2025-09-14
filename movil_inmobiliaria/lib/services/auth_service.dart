@@ -4,9 +4,12 @@ import 'package:movil_inmobiliaria/models/login_response.dart';
 import 'package:movil_inmobiliaria/models/usuario_model.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:movil_inmobiliaria/config/config.dart';
 
 class AuthService {
-  final String baseUrl = "http://10.0.2.2:8000/usuario";
+  final String baseUrl = '${Config.baseUrl}/usuario';
+  // "http://10.0.2.2:8000/usuario";
+  // "http://192.168.100.12:8000/usuario";
 
   // Login
   Future<LoginResponse> login(String username, String password) async {

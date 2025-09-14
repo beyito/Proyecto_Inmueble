@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:movil_inmobiliaria/config/config.dart';
 
 class EditProfilePage extends StatefulWidget {
   final Map<String, dynamic>? userData;
@@ -53,7 +54,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     }
 
     final response = await http.put(
-      Uri.parse("http://10.0.2.2:8000/usuario/editarUsuario"),
+      Uri.parse('${Config.baseUrl}/usuario/editarUsuario'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Token $token',

@@ -2,9 +2,12 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'auth_service.dart';
 import '../models/usuario_model.dart';
+import 'package:movil_inmobiliaria/config/config.dart';
 
 class UsuarioService {
-  final String baseUrl = "http://10.0.2.2:8000/usuario";
+  final String baseUrl = '${Config.baseUrl}/usuario';
+  // "http://10.0.2.2:8000/usuario";
+  // "http://192.168.100.12:8000/usuario";
   final AuthService authService = AuthService();
 
   // Mostrar usuarios

@@ -2,6 +2,7 @@ import 'package:movil_inmobiliaria/pages/home_page.dart';
 import 'package:movil_inmobiliaria/views/login/login_page.dart';
 import 'package:movil_inmobiliaria/views/usuario/perfil_view.dart';
 import 'package:go_router/go_router.dart';
+import 'package:movil_inmobiliaria/views/usuario/recuperacionPassword_view.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:movil_inmobiliaria/views/usuario/registerAgente_view.dart';
 import 'package:movil_inmobiliaria/views/usuario/registerCliente_view.dart';
@@ -48,6 +49,12 @@ final appRouter = GoRouter(
       builder: (context, state) =>
           const RegisterAgenteView(), // 👈 pantalla de registro de agentes
     ),
+    GoRoute(
+      path: '/recuperar-password',
+      name: RecuperacionPasswordView.name,
+      builder: (context, state) =>
+          const RecuperacionPasswordView(), // 👈 pantalla de recuperacion contraseña
+    ),
     GoRoute(path: '/', redirect: (_, __) => '/home/0'),
   ],
   redirect: (context, state) async {
@@ -56,12 +63,13 @@ final appRouter = GoRouter(
 
     final loggingIn = location == '/login';
     final registering = location == '/register' || location == '/agente';
+    final recovering = location == '/recuperar-password';
 
-    if (!loggedIn && !(loggingIn || registering)) {
+    if (!loggedIn && !(loggingIn || registering || recovering)) {
       return '/login';
     }
 
-    if (loggedIn && (loggingIn || registering)) {
+    if (loggedIn && (loggingIn || registering || recovering)) {
       return '/home/0';
     }
 

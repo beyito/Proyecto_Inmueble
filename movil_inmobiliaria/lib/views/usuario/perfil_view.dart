@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'editarPerfil_view.dart';
 import 'dart:convert';
+import 'package:movil_inmobiliaria/config/config.dart';
 
 class PerfilView extends StatefulWidget {
   static const name = 'perfil-screen';
@@ -38,7 +39,7 @@ class _PerfilViewState extends State<PerfilView> {
 
       final response = await http.get(
         Uri.parse(
-          "http://10.0.2.2:8000/usuario/profile/",
+          '${Config.baseUrl}/usuario/profile/',
         ), // 👈 Ajusta la ruta a la de tu backend
         headers: {
           'Content-Type': 'application/json',

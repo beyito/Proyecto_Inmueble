@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-=ho1+m-e7v&em6l97swgu32rk78+xv8o2z+4vz@f0s#kkfjqe1
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*', '10.0.2.2', 'localhost']
+ALLOWED_HOSTS = ['*', '10.0.2.2', 'localhost', '192.168.100.12']
 
 AUTH_USER_MODEL = 'usuario.Usuario'
 
@@ -85,7 +85,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME':'inmobiliaria', # ponen el nombre de su base de datos de postgresql
         'USER':'postgres',
-        'PASSWORD':'KevinAntonio', # su contraseña que usan para entrar a postgresql
+        'PASSWORD':'CObuchan8', # su contraseña que usan para entrar a postgresql
         'HOST':'localhost',
         'PORT':'5432',
     }
@@ -96,18 +96,18 @@ DATABASES = {
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    # {
+    #     'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    # },
+    # {
+    #     'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+    # },
+    # {
+    #     'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    # },
+    # {
+    #     'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    # },
 ]
 
 
@@ -148,8 +148,8 @@ REST_FRAMEWORK = {
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "sandbox.smtp.mailtrap.io"
-EMAIL_HOST_USER = "d4bbac28091f8e"
-EMAIL_HOST_PASSWORD = "241866b2e2649f"
+EMAIL_HOST_USER = "7bee7fa1aa4c21"
+EMAIL_HOST_PASSWORD = "de7da4308fe225"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 

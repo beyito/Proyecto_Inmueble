@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:go_router/go_router.dart';
+import 'package:movil_inmobiliaria/config/config.dart';
 
 class RegisterClienteView extends StatefulWidget {
   static const name = 'registerCliente-screen';
@@ -46,7 +47,7 @@ class _RegisterClienteViewSite extends State<RegisterClienteView> {
     try {
       final response = await http.post(
         Uri.parse(
-          "http://10.0.2.2:8000/usuario/register/",
+          '${Config.baseUrl}/usuario/registerCliente/',
         ), // Ajusta tu endpoint
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(data),

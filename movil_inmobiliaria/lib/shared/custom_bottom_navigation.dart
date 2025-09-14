@@ -29,10 +29,7 @@ class CustomBottomNavigation extends StatelessWidget {
       onTap: (value) => onItemTapped(context, value),
       items: const [
         // Podemos colocar más o quitar. La cantidad tiene que se el mismo que onItemTapped
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home_max),
-          label: 'Inicio',
-        ),
+        BottomNavigationBarItem(icon: Icon(Icons.home_max), label: 'Inicio'),
         BottomNavigationBarItem(
           icon: Icon(Icons.label_outline),
           label: 'Categorías',

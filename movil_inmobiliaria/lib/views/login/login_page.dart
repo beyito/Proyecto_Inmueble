@@ -95,6 +95,7 @@ class _LoginPageState extends State<LoginPage> {
                         obscureText: true,
                       ),
                       const SizedBox(height: 20),
+                      // Dentro del Card, después del botón de "Iniciar sesión"
                       _isLoading
                           ? const CircularProgressIndicator()
                           : SizedBox(
@@ -116,6 +117,37 @@ class _LoginPageState extends State<LoginPage> {
                                 child: const Text("Iniciar sesión"),
                               ),
                             ),
+                      // Mostrar error si existe
+                      if (_errorMessage.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 12.0),
+                          child: Text(
+                            _errorMessage,
+                            style: const TextStyle(
+                              color: Colors.redAccent,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      // 👇 Nuevo botón de "Olvidaste tu contraseña?"
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: () {
+                            context.push(
+                              '/recuperar-password',
+                            ); // Aquí debe ir tu ruta de recuperación
+                          },
+                          child: const Text(
+                            "¿Olvidaste tu contraseña?",
+                            style: TextStyle(
+                              color: Colors.redAccent,
+                              fontSize: 14,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
