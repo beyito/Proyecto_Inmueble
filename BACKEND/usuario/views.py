@@ -53,127 +53,70 @@ def login(request):
     },)
 
 
-@api_view(['POST'])
+@api_view(['POST']) 
 def register(request):
-    """
-    Registro de usuario:
-    - Por defecto crea Cliente (idRol=2).
-    - Si se envía idRol:
-        * 1 = Administrador  → permitido SIEMPRE (incluso si ya existen admins).
-        * 2 = Cliente         → permitido siempre.
-        * 3 = Agente u otros  → si YA hay admins, exige que quien llama sea Admin/Superuser.
-    """
-    from .models import Rol, Usuario  # por si no están importados arriba
-    from rest_framework.authtoken.models import Token
-
-    data = request.data.copy()  # QueryDict -> mutable
-
-    # --- Resolver roles base ---
-    try:
-        rol_cliente = Rol.objects.get(idRol=2)
-    except Rol.DoesNotExist:
-        rol_cliente = Rol.objects.filter(nombre__iexact="Cliente").first()
-
-    try:
-        rol_admin = Rol.objects.get(idRol=1)
-    except Rol.DoesNotExist:
-        rol_admin = Rol.objects.filter(nombre__iexact="Administrador").first()
-
-    if not rol_cliente:
-        return Response({
-            "status": 2, "error": 1,
-            "message": "No existe el rol 'Cliente' (id 2).",
-            "values": None
-        }, status=status.HTTP_400_BAD_REQUEST)
-
-    # ¿Pidieron un rol explícito?
-    requested_idrol = data.get("idRol", None)
-    admins_exist = Usuario.objects.filter(idRol__nombre__iexact="Administrador").exists()
-
-    def set_cliente():
-        data["idRol"] = rol_cliente.idRol
-
-    if requested_idrol is None:
-        # Sin idRol -> por defecto Cliente
-        set_cliente()
-    else:
-        # Normalizar a int si viene como string
-        try:
-            requested_idrol = int(requested_idrol)
-        except (TypeError, ValueError):
-            return Response({
-                "status": 2, "error": 1,
-                "message": "idRol inválido.",
-                "values": None
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        # Si es explícitamente Cliente
-        if requested_idrol == (rol_cliente.idRol if rol_cliente else 2):
-            set_cliente()
-        else:
-            # --- NUEVA REGLA: permitir crear ADMIN siempre (idRol == 1) ---
-            if rol_admin and requested_idrol == rol_admin.idRol or requested_idrol == 1:
-                data["idRol"] = requested_idrol  # permitir aunque ya existan admins
-            else:
-                # Para otros roles ≠ Cliente, si YA hay admins, exigir Admin/Superuser autenticado
-                if admins_exist:
-                    user = request.user
-                    es_admin_o_super = getattr(user, "is_authenticated", False) and (
-                        (hasattr(user, "es_admin") and user.es_admin()) or user.is_superuser
-                    )
-                    if not es_admin_o_super:
-                        return Response({
-                            "status": 2, "error": 1,
-                            "message": "No autorizado para asignar roles distintos de 'Cliente'.",
-                            "values": None
-                        }, status=status.HTTP_403_FORBIDDEN)
-                data["idRol"] = requested_idrol
-
-    # No queremos crear Cliente() asociado si mandan 'ubicacion' por accidente al crear Admin u otro rol
-    if "ubicacion" in data and int(data["idRol"]) != (rol_cliente.idRol if rol_cliente else 2):
-        data.pop("ubicacion")
-
-    serializer = ClienteSerializer(data=data)
+    request.data['idRol'] = 2  # Asignar rol de Cliente (id=3)
+    serializer = ClienteSerializer(data=request.data)
     if serializer.is_valid():
-        usuario = serializer.save()  # usa create del serializer (hashea password)
-        # Si es Admin, darle acceso al /admin de Django
-        try:
-            if rol_admin and usuario.idRol_id == rol_admin.idRol:
-                usuario.is_staff = True
-                usuario.save()
-        except Exception:
-            pass
-
+        usuario = ClienteSerializer.create(ClienteSerializer(), validated_data=serializer.validated_data)
         token = Token.objects.create(user=usuario)
         return Response({
             "status": 1,
             "error": 0,
             "message": "REGISTRO EXITOSO",
-            "values": {"token": token.key, "user": UsuarioSerializer(usuario).data}
-        }, status=status.HTTP_201_CREATED)
-
-    return Response({
-        "status": 2,
-        "error": 1,
-        "message": "ERROR EN EL REGISTRO",
-        "values": serializer.errors
-    }, status=status.HTTP_400_BAD_REQUEST)
+            "values": {"token": token.key, "user": serializer.data}
+        })
+    ...
 
 
 @api_view(['POST'])
 def registerAgente(request):
-    serializer = AgenteSerializer(data=request.data)           # ← sin setear idRol
+    request.data['idRol'] = 3 
+    serializer = AgenteSerializer(data=request.data)
     if serializer.is_valid():
-        usuario = serializer.save()                            # ← usa create del serializer (rol fijo)
+        usuario = AgenteSerializer.create(AgenteSerializer(), validated_data=serializer.validated_data)
         token = Token.objects.create(user=usuario)
         return Response({
             "status": 1,
             "error": 0,
             "message": "REGISTRO DE AGENTE EXITOSO",
-            "values": {"token": token.key, "user": UsuarioSerializer(usuario).data}
+            "values": {"token": token.key, "user": serializer.data}
         })    
     ...
+@api_view(['POST'])
+def registerAdmin(request):
+    # Forzamos rol Administrador (idRol = 1)
+    data = request.data.copy()
+    data['idRol'] = 1
 
+    serializer = ClienteSerializer(data=data)
+    if serializer.is_valid():
+        # crea usuario y hashea contraseña dentro del serializer
+        usuario: Usuario = serializer.save()
+
+        # acceso al panel /admin de Django
+        usuario.is_staff = True
+        usuario.save()
+
+        # token como en los otros registros
+        token = Token.objects.create(user=usuario)
+
+        return Response({
+            "status": 1,
+            "error": 0,
+            "message": "REGISTRO DE ADMINISTRADOR EXITOSO",
+            "values": {
+                "token": token.key,
+                "user": UsuarioSerializer(usuario).data
+            }
+        }, status=status.HTTP_201_CREATED)
+
+    return Response({
+        "status": 2,
+        "error": 1,
+        "message": "ERROR EN EL REGISTRO DE ADMINISTRADOR",
+        "values": serializer.errors
+    }, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(["GET", "POST"])  
 @permission_classes([IsAuthenticated])
@@ -183,29 +126,27 @@ def profile(request):
     return Response(data, status=status.HTTP_200_OK)
 
 @api_view(['PATCH'])
-@authentication_classes([TokenAuthentication])
+@authentication_classes([TokenAuthentication])  # ⬅️ FORZAMOS TokenAuth
 @permission_classes([IsAuthenticated])
 def update_usuario(request, pk):
     usuario = get_object_or_404(Usuario, pk=pk)
-
-    # ✅ Sólo el dueño o un Admin pueden editar
-    if (request.user.id != usuario.id) and (not request.user.es_admin()):
-        return Response(
-            {"detail": "No tienes permiso para actualizar este usuario."},
-            status=status.HTTP_403_FORBIDDEN
-        )
-
     serializer = UsuarioSerializer(usuario, data=request.data, partial=True)
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    return Response({
+        "status": 1,
+        "error": 0,
+        "message": "PERFIL OBTENIDO",
+        "values": data
+    })
 
 @api_view(['GET'])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def mostrarUsuarios(request):
-    if not request.user.es_admin():    # ← ahora solo Admin lista
+    if request.user.es_cliente():  
         return Response({
             "status": 2,
             "error": 1,
@@ -221,7 +162,6 @@ def mostrarUsuarios(request):
         "message": "USUARIOS OBTENIDOS",
         "values": serializer.data
     })
-
 
 class ContratoAgenteView(APIView):
     def post(self, request):

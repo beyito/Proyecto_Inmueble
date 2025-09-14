@@ -11,6 +11,7 @@ urlpatterns = [
     path('recuperacion-codigo/', views.PasswordResetRequestView.as_view(), name='codigo-recuperacion'),
     path('recuperacion-codigo-confirmar/', views.PasswordResetVerifyCodeView.as_view(), name='recuperacion-codigo-confirmar'),
     path("generarContratoPdf/", views.ContratoAgenteView.as_view(), name="generarContratoPdf"),
+    path('registerAdmin/', views.registerAdmin),
     path('editarUsuario', views.actualizarUsuario, name='editarUsuario'),# Editar usuario
     path('roles', views.roles_list_create), #Lista todos los roles (GET) o crea un rol nuevo (POST). Solo para usuarios con rol Administrador.
     path('roles/<int:idRol>', views.roles_update_delete), #Actualiza el nombre de un rol (PATCH) o elimina un rol (DELETE). Impide borrar el rol “Administrador” si aún existe al menos un admin. Solo Administrador.
