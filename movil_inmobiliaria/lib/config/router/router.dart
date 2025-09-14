@@ -3,6 +3,8 @@ import 'package:movil_inmobiliaria/views/login/login_page.dart';
 import 'package:movil_inmobiliaria/views/usuario/perfil_view.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:movil_inmobiliaria/views/usuario/registerAgente_view.dart';
+import 'package:movil_inmobiliaria/views/usuario/registerCliente_view.dart';
 
 // Tu función de verificación
 Future<bool> isLoggedIn() async {
@@ -22,47 +24,47 @@ final appRouter = GoRouter(
         return HomePage(pageIndex: pageIndex);
       },
       routes: [
-        // Son sub rutas dentro de home/:page. Osea /home/0/perfil
         GoRoute(
           path: 'perfil',
           name: PerfilView.name,
-          builder: (context, state) {
-            return PerfilView();
-          },
+          builder: (context, state) => const PerfilView(),
         ),
-        // GoRoute( // EJEMPLO PARA RUTA CON UN PARAMETRO. PARA ACCEDER A ÉL: context.go('/home/0/miruta/123');
-        //   path: 'miruta/:id',
-        //   name: MiWidgetScreen.name,
-        //   builder: (context, state) {
-        //     final valueID = state.pathParameters['id'] ?? 'no-id'; // id: representa el nombre de la variable, puede ser int, str.
-        //La recuperamos para enviarselo al MiWidgetScreen que espera un valor de parámetro
-        //     return MiWidgetScreen(nombreDelParametro: valueID); //
-        //   },
-        // ),
       ],
     ),
     GoRoute(
-      //Ruta raíz, fuera del dominio de /home. Osea /login
       path: '/login',
       name: LoginPage.name,
-      builder: (context, state) => LoginPage(),
-      routes: [], //No tendrá sub rutas
+      builder: (context, state) => const LoginPage(),
+    ),
+    GoRoute(
+      path: '/register',
+      name: RegisterClienteView.name,
+      builder: (context, state) =>
+          const RegisterClienteView(), // 👈 tu pantalla de registro de usuarios
+    ),
+    GoRoute(
+      path: '/agente',
+      name: RegisterAgenteView.name,
+      builder: (context, state) =>
+          const RegisterAgenteView(), // 👈 pantalla de registro de agentes
     ),
     GoRoute(path: '/', redirect: (_, __) => '/home/0'),
   ],
   redirect: (context, state) async {
     final loggedIn = await isLoggedIn();
-    final loggingIn = state.location.toString() == '/login';
+    final location = state.location.toString();
 
-    // Si no está logueado y NO está en login, lo mandamos a login
-    if (!loggedIn && !loggingIn) {
+    final loggingIn = location == '/login';
+    final registering = location == '/register' || location == '/agente';
+
+    if (!loggedIn && !(loggingIn || registering)) {
       return '/login';
     }
-    // Si ya está logueado e intenta ir a login, lo mandamos al home
-    if (loggedIn && loggingIn) {
+
+    if (loggedIn && (loggingIn || registering)) {
       return '/home/0';
     }
-    // Si no, no redirige
+
     return null;
   },
 );

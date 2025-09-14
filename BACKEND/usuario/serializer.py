@@ -15,7 +15,7 @@ class ClienteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Usuario
-        fields = ['username', 'nombre', 'correo', 'telefono', 'ubicacion', 'password', 'idRol']
+        fields = ['username', 'nombre', 'correo', 'telefono', 'ci', 'ubicacion', 'password', 'idRol']
 
     def create(self, validated_data):
         ubicacion = validated_data.pop('ubicacion', None)
@@ -52,7 +52,7 @@ class AgenteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Usuario
-        fields = ['username', 'nombre', 'correo', 'telefono', 'password', 'idRol', 'numero_licencia', 'experiencia']
+        fields = ['username', 'nombre', 'correo', 'telefono', 'password','ci','idRol', 'numero_licencia', 'experiencia']
 
     def create(self, validated_data):
         numero_licencia = validated_data.pop('numero_licencia', None)
