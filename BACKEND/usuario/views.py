@@ -54,6 +54,7 @@ def login(request):
 
 @api_view(['POST']) 
 def register(request):
+    request.data['idRol'] = 2  # Asignar rol de Cliente (id=3)
     serializer = ClienteSerializer(data=request.data)
     if serializer.is_valid():
         usuario = ClienteSerializer.create(ClienteSerializer(), validated_data=serializer.validated_data)
@@ -77,6 +78,7 @@ def register(request):
 
 @api_view(['POST'])
 def registerAgente(request):
+    request.data['idRol'] = 3 
     serializer = AgenteSerializer(data=request.data)
     if serializer.is_valid():
         usuario = AgenteSerializer.create(AgenteSerializer(), validated_data=serializer.validated_data)
