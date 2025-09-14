@@ -49,8 +49,7 @@ class _PerfilViewState extends State<PerfilView> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         setState(() {
-          userData =
-              data["values"]; // Aquí deberías recibir username, email, rol, etc.
+          userData = data; // Aquí deberías recibir username, email, rol, etc.
           loading = false;
         });
       } else {

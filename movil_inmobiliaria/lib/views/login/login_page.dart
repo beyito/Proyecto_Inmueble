@@ -28,21 +28,13 @@ class _LoginPageState extends State<LoginPage> {
         _passwordController.text,
       );
       if (resAuth.status == 1) {
-        // Login exitoso según auth_service.dart
-        context.go(
-          '/home/1',
-        ); //AQUI ES DONDE REDIRIJE AL HOME (0 cero indica el índice de navegación de las tres opciones [Inicio, Categorias, Favoritos])
+        // Login exitoso
+        context.go('/home/0');
       } else {
         setState(() {
           _errorMessage = resAuth.error ?? 'Error desconocido';
         });
       }
-      // final prefs = await SharedPreferences.getInstance();
-
-      // await prefs.setString('token', resAuth.token ?? '');
-      // await prefs.setString('rol', );
-      // await prefs.setString('username', );
-      // context.go('/home/0');
     } catch (e) {
       print('Error al conectar con el servidor: $e');
       setState(() {
@@ -58,38 +50,131 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Iniciar sesión")),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _usernameController,
-              decoration: const InputDecoration(labelText: "Usuario"),
-            ),
-            TextField(
-              controller: _passwordController,
-              decoration: const InputDecoration(labelText: "Contraseña"),
-              obscureText: true,
-            ),
-            const SizedBox(height: 20),
-            _isLoading
-                ? const CircularProgressIndicator()
-                : ElevatedButton(
-                    onPressed: () async {
-                      await login(context);
-                    },
-                    child: const Text("Iniciar sesión"),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: 40),
+
+              // Logo o avatar
+              CircleAvatar(
+                radius: 50,
+                backgroundColor: Colors.blueAccent.shade100,
+                child: const Icon(Icons.home, size: 50, color: Colors.white),
+              ),
+              const SizedBox(height: 20),
+
+              const Text(
+                "Bienvenido a Nuestra Inmobiliaria",
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 40),
+
+              // Card con campos de login
+              Card(
+                elevation: 5,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      _buildTextField(
+                        controller: _usernameController,
+                        label: "Usuario",
+                        icon: Icons.person,
+                      ),
+                      _buildTextField(
+                        controller: _passwordController,
+                        label: "Contraseña",
+                        icon: Icons.lock,
+                        obscureText: true,
+                      ),
+                      const SizedBox(height: 20),
+                      _isLoading
+                          ? const CircularProgressIndicator()
+                          : SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: () async {
+                                  await login(context);
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 16,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  backgroundColor: Colors.blueAccent,
+                                  textStyle: const TextStyle(fontSize: 18),
+                                ),
+                                child: const Text("Iniciar sesión"),
+                              ),
+                            ),
+                    ],
                   ),
-            if (_errorMessage.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 12.0),
-                child: Text(
-                  _errorMessage,
-                  style: const TextStyle(color: Colors.red),
                 ),
               ),
-          ],
+
+              const SizedBox(height: 20),
+
+              // Links de registro
+              Column(
+                children: [
+                  TextButton(
+                    onPressed: () => context.push('/register'),
+                    child: const Text(
+                      "¿No estás registrado? Regístrate aquí",
+                      style: TextStyle(
+                        color: Colors.blueAccent,
+                        fontSize: 14,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () => context.push('/agente'),
+                    child: const Text(
+                      "¿Eres agente inmobiliario? Trabaja con nosotros aquí",
+                      style: TextStyle(
+                        color: Colors.blueAccent,
+                        fontSize: 14,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Función helper para los campos de texto con ícono
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    bool obscureText = false,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: TextField(
+        controller: controller,
+        obscureText: obscureText,
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: Icon(icon),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+          filled: true,
+          fillColor: Colors.grey.shade100,
         ),
       ),
     );

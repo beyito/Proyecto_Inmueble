@@ -1,5 +1,7 @@
 from rest_framework import serializers
-from .models import Usuario, Cliente, Agente, Rol
+
+from .models import Usuario, Cliente, Agente ,Rol
+
 
 class UsuarioSerializer(serializers.ModelSerializer):
     rolNombre = serializers.CharField(source='idRol.nombre', read_only=True)
@@ -13,7 +15,7 @@ class ClienteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Usuario
-        fields = ['username', 'nombre', 'correo', 'telefono', 'ubicacion', 'password', 'idRol']
+        fields = ['username', 'nombre', 'correo', 'telefono', 'ci', 'ubicacion', 'password', 'idRol']
 
     def create(self, validated_data):
         ubicacion = validated_data.pop('ubicacion', None)
@@ -23,7 +25,6 @@ class ClienteSerializer(serializers.ModelSerializer):
         if ubicacion:
             Cliente.objects.create(idUsuario=usuario, ubicacion=ubicacion)
         return usuario
-
 
 
 class AgenteSerializer(serializers.ModelSerializer):
@@ -48,9 +49,11 @@ class AgenteSerializer(serializers.ModelSerializer):
 class PasswordResetRequestSerializer(serializers.Serializer):
     correo = serializers.EmailField()
 
+
 class PasswordResetVerifyCodeSerializer(serializers.Serializer):
     correo = serializers.EmailField()
     code = serializers.CharField(max_length=6)
+
 
 class SetNewPasswordSerializer(serializers.Serializer):
     correo = serializers.EmailField()
@@ -59,4 +62,4 @@ class SetNewPasswordSerializer(serializers.Serializer):
 class RolSerializer(serializers.ModelSerializer):
     class Meta:
         model = Rol
-        fields = ["idRol", "nombre", "created_at", "updated_at"]  # ← usa # para comentar, no //
+        fields = ["idRol", "nombre", "created_at", "updated_at"]  

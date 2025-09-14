@@ -101,3 +101,41 @@
   white-space: normal;
   line-height: 1.25;
 }
+/* Botón que se ve como nav-item */
+.agente-button {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 28px auto; /* icono + texto */
+  align-items: center; /* centra verticalmente */
+  justify-items: start; /* alinea a la izquierda horizontalmente */
+  padding: 10px 12px;
+  padding-left: 20px;
+  border-radius: 10px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.agente-button:hover {
+  background: rgba(79, 70, 229, 0.12);
+}
+
+/* Sub-item con animación */
+.nav-subitem {
+  padding: 8px 12px 8px 44px; /* identado para que quede debajo del label */
+  border-radius: 8px;
+  background: rgba(79, 70, 229, 0.05);
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  transform: translateY(-5px);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.nav-subitem.show {
+  opacity: 1;
+  max-height: 50px; /* ajustar según contenido */
+  transform: translateY(0);
+}
