@@ -212,6 +212,40 @@ def registerAgente(request):
         "values": {"solicitud_id": solicitud.idSolicitud, "solicitud": serializer.data}
     })
 
+@api_view(['POST'])
+def registerAdmin(request):
+    # Forzamos rol Administrador (idRol = 1)
+    data = request.data.copy()
+    data['idRol'] = 1
+
+    serializer = ClienteSerializer(data=data)
+    if serializer.is_valid():
+        # crea usuario y hashea contraseña dentro del serializer
+        usuario: Usuario = serializer.save()
+
+        # acceso al panel /admin de Django
+        usuario.is_staff = True
+        usuario.save()
+
+        # token como en los otros registros
+        token = Token.objects.create(user=usuario)
+
+        return Response({
+            "status": 1,
+            "error": 0,
+            "message": "REGISTRO DE ADMINISTRADOR EXITOSO",
+            "values": {
+                "token": token.key,
+                "user": UsuarioSerializer(usuario).data
+            }
+        }, status=status.HTTP_201_CREATED)
+
+    return Response({
+        "status": 2,
+        "error": 1,
+        "message": "ERROR EN EL REGISTRO DE ADMINISTRADOR",
+        "values": serializer.errors
+    }, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(["GET", "POST"])  
 @permission_classes([IsAuthenticated])
