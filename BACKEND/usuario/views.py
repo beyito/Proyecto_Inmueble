@@ -5,7 +5,7 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework import status
-from .serializer import UsuarioSerializer, ClienteSerializer, AgenteSerializer, PasswordResetRequestSerializer, PasswordResetVerifyCodeSerializer, SetNewPasswordSerializer
+from .serializer import UsuarioSerializer, ClienteSerializer, AgenteSerializer, PasswordResetRequestSerializer, PasswordResetVerifyCodeSerializer, SetNewPasswordSerializer,Rol,RolSerializer
 from django.core.mail import send_mail
 from django.contrib.auth.models import User
 from .models import PasswordResetCode, Usuario, Cliente, Agente, PasswordResetCode
@@ -17,6 +17,7 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, HRFlowable
 from reportlab.lib.enums import TA_JUSTIFY, TA_CENTER
 from reportlab.lib import colors
 from django.http import HttpResponse
+from .permissions import IsAdminRole, IsSuperUser
 import os
 import io
 # Create your views here.
@@ -52,50 +53,126 @@ def login(request):
     },)
 
 
-@api_view(['POST']) 
+@api_view(['POST'])
 def register(request):
-    request.data['idRol'] = 2  # Asignar rol de Cliente (id=3)
-    serializer = ClienteSerializer(data=request.data)
+    """
+    Registro de usuario:
+    - Por defecto crea Cliente (idRol=2).
+    - Si se envía idRol:
+        * 1 = Administrador  → permitido SIEMPRE (incluso si ya existen admins).
+        * 2 = Cliente         → permitido siempre.
+        * 3 = Agente u otros  → si YA hay admins, exige que quien llama sea Admin/Superuser.
+    """
+    from .models import Rol, Usuario  # por si no están importados arriba
+    from rest_framework.authtoken.models import Token
+
+    data = request.data.copy()  # QueryDict -> mutable
+
+    # --- Resolver roles base ---
+    try:
+        rol_cliente = Rol.objects.get(idRol=2)
+    except Rol.DoesNotExist:
+        rol_cliente = Rol.objects.filter(nombre__iexact="Cliente").first()
+
+    try:
+        rol_admin = Rol.objects.get(idRol=1)
+    except Rol.DoesNotExist:
+        rol_admin = Rol.objects.filter(nombre__iexact="Administrador").first()
+
+    if not rol_cliente:
+        return Response({
+            "status": 2, "error": 1,
+            "message": "No existe el rol 'Cliente' (id 2).",
+            "values": None
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    # ¿Pidieron un rol explícito?
+    requested_idrol = data.get("idRol", None)
+    admins_exist = Usuario.objects.filter(idRol__nombre__iexact="Administrador").exists()
+
+    def set_cliente():
+        data["idRol"] = rol_cliente.idRol
+
+    if requested_idrol is None:
+        # Sin idRol -> por defecto Cliente
+        set_cliente()
+    else:
+        # Normalizar a int si viene como string
+        try:
+            requested_idrol = int(requested_idrol)
+        except (TypeError, ValueError):
+            return Response({
+                "status": 2, "error": 1,
+                "message": "idRol inválido.",
+                "values": None
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Si es explícitamente Cliente
+        if requested_idrol == (rol_cliente.idRol if rol_cliente else 2):
+            set_cliente()
+        else:
+            # --- NUEVA REGLA: permitir crear ADMIN siempre (idRol == 1) ---
+            if rol_admin and requested_idrol == rol_admin.idRol or requested_idrol == 1:
+                data["idRol"] = requested_idrol  # permitir aunque ya existan admins
+            else:
+                # Para otros roles ≠ Cliente, si YA hay admins, exigir Admin/Superuser autenticado
+                if admins_exist:
+                    user = request.user
+                    es_admin_o_super = getattr(user, "is_authenticated", False) and (
+                        (hasattr(user, "es_admin") and user.es_admin()) or user.is_superuser
+                    )
+                    if not es_admin_o_super:
+                        return Response({
+                            "status": 2, "error": 1,
+                            "message": "No autorizado para asignar roles distintos de 'Cliente'.",
+                            "values": None
+                        }, status=status.HTTP_403_FORBIDDEN)
+                data["idRol"] = requested_idrol
+
+    # No queremos crear Cliente() asociado si mandan 'ubicacion' por accidente al crear Admin u otro rol
+    if "ubicacion" in data and int(data["idRol"]) != (rol_cliente.idRol if rol_cliente else 2):
+        data.pop("ubicacion")
+
+    serializer = ClienteSerializer(data=data)
     if serializer.is_valid():
-        usuario = ClienteSerializer.create(ClienteSerializer(), validated_data=serializer.validated_data)
+        usuario = serializer.save()  # usa create del serializer (hashea password)
+        # Si es Admin, darle acceso al /admin de Django
+        try:
+            if rol_admin and usuario.idRol_id == rol_admin.idRol:
+                usuario.is_staff = True
+                usuario.save()
+        except Exception:
+            pass
+
         token = Token.objects.create(user=usuario)
         return Response({
             "status": 1,
             "error": 0,
             "message": "REGISTRO EXITOSO",
-            "values": {"token": token.key, "user": serializer.data}
-        })
-    
+            "values": {"token": token.key, "user": UsuarioSerializer(usuario).data}
+        }, status=status.HTTP_201_CREATED)
+
     return Response({
         "status": 2,
         "error": 1,
         "message": "ERROR EN EL REGISTRO",
         "values": serializer.errors
-    })
-
-
+    }, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])
 def registerAgente(request):
-    request.data['idRol'] = 3 
-    serializer = AgenteSerializer(data=request.data)
+    serializer = AgenteSerializer(data=request.data)           # ← sin setear idRol
     if serializer.is_valid():
-        usuario = AgenteSerializer.create(AgenteSerializer(), validated_data=serializer.validated_data)
+        usuario = serializer.save()                            # ← usa create del serializer (rol fijo)
         token = Token.objects.create(user=usuario)
         return Response({
             "status": 1,
             "error": 0,
             "message": "REGISTRO DE AGENTE EXITOSO",
-            "values": {"token": token.key, "user": serializer.data}
+            "values": {"token": token.key, "user": UsuarioSerializer(usuario).data}
         })    
-    
-    return Response({
-        "status": 2,
-        "error": 1,
-        "message": "ERROR EN EL REGISTRO DE AGENTE",
-        "values": serializer.errors
-    })
+    ...
 
 
 @api_view(["GET", "POST"])  
@@ -106,27 +183,29 @@ def profile(request):
     return Response(data, status=status.HTTP_200_OK)
 
 @api_view(['PATCH'])
-@authentication_classes([TokenAuthentication])  # ⬅️ FORZAMOS TokenAuth
+@authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def update_usuario(request, pk):
     usuario = get_object_or_404(Usuario, pk=pk)
+
+    # ✅ Sólo el dueño o un Admin pueden editar
+    if (request.user.id != usuario.id) and (not request.user.es_admin()):
+        return Response(
+            {"detail": "No tienes permiso para actualizar este usuario."},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
     serializer = UsuarioSerializer(usuario, data=request.data, partial=True)
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    return Response({
-        "status": 1,
-        "error": 0,
-        "message": "PERFIL OBTENIDO",
-        "values": data
-    })
 
 @api_view(['GET'])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def mostrarUsuarios(request):
-    if not request.user.es_cliente():  
+    if not request.user.es_admin():    # ← ahora solo Admin lista
         return Response({
             "status": 2,
             "error": 1,
@@ -402,3 +481,79 @@ def actualizarUsuario(request):
         "message": "ERROR AL ACTUALIZAR",
         "values": serializer.errors
     })
+def _count_admins():
+    try:
+        admin_rol = Rol.objects.get(nombre="Administrador")
+    except Rol.DoesNotExist:
+        return 0
+    return Usuario.objects.filter(idRol=admin_rol).count()
+@api_view(['GET', 'POST'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated, IsAdminRole])
+def roles_list_create(request):
+    if request.method == 'GET':
+        roles = Rol.objects.all().order_by('idRol')
+        return Response(RolSerializer(roles, many=True).data)
+    # POST
+    nombre = request.data.get("nombre", "").strip()
+    if not nombre:
+        return Response({"detail": "nombre es requerido"}, status=400)
+    rol, created = Rol.objects.get_or_create(nombre=nombre)
+    return Response(RolSerializer(rol).data, status=201 if created else 200)
+
+@api_view(['PATCH', 'DELETE'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated, IsAdminRole])
+def roles_update_delete(request, idRol):
+    rol = get_object_or_404(Rol, pk=idRol)
+    if request.method == 'PATCH':
+        nombre = request.data.get("nombre", "").strip()
+        if not nombre:
+            return Response({"detail": "nombre es requerido"}, status=400)
+        rol.nombre = nombre
+        rol.save(update_fields=["nombre"])
+        return Response(RolSerializer(rol).data)
+    # DELETE: evita borrar el rol Administrador si hay admins activos
+    if rol.nombre == "Administrador" and _count_admins() > 0:
+        return Response({"detail": "No puedes borrar el rol 'Administrador' mientras existan admins."}, status=409)
+    rol.delete()
+    return Response(status=204)
+@api_view(['PATCH'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated, IsAdminRole])
+def usuarios_set_rol(request, user_id):
+    user = get_object_or_404(Usuario, pk=user_id)
+    # aceptar idRol o nombre
+    idRol = request.data.get("idRol")
+    nombre = request.data.get("nombre")
+    if idRol is None and not nombre:
+        return Response({"detail": "Provee idRol o nombre"}, status=400)
+    try:
+        rol = Rol.objects.get(pk=idRol) if idRol is not None else Rol.objects.get(nombre=nombre)
+    except Rol.DoesNotExist:
+        return Response({"detail": "Rol no existe"}, status=404)
+
+    # Evitar dejar el sistema sin admins
+    if user.es_admin() and rol.nombre != "Administrador" and _count_admins() == 1:
+        return Response({"detail": "No puedes degradar al ÚNICO administrador."}, status=409)
+
+    user.idRol = rol
+    user.save(update_fields=["idRol"])
+    return Response(UsuarioSerializer(user).data)
+
+@api_view(['PATCH'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated, IsAdminRole])
+def usuarios_update_basic(request, user_id):
+    """Admin: actualizar datos básicos (nombre, correo, telefono, ci)"""
+    user = get_object_or_404(Usuario, pk=user_id)
+    allowed = {"nombre", "correo", "telefono", "ci"}
+    data = {k: v for k, v in request.data.items() if k in allowed}
+    if not data:
+        return Response({"detail": "Nada para actualizar."}, status=status.HTTP_400_BAD_REQUEST)
+
+    serializer = UsuarioSerializer(user, data=data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
