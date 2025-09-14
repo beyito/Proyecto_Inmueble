@@ -14,10 +14,13 @@ class RegisterAgenteView extends StatefulWidget {
 
 class _RegisterAgenteViewState extends State<RegisterAgenteView> {
   final _formKey = GlobalKey<FormState>();
-
+  // nombre = models.CharField(max_length=100)
+  //     correo = models.EmailField(unique=True)
+  //     telefono = models.CharField(max_length=20)
+  //     numero_licencia = models.CharField(max_length=50, unique=True)
+  //     experiencia = models.IntegerField(default=0)
+  //     ci
   final TextEditingController _nombreController = TextEditingController();
-  final TextEditingController _usernameController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _correoController = TextEditingController();
   final TextEditingController _ciController = TextEditingController();
   final TextEditingController _telefonoController = TextEditingController();
@@ -38,8 +41,6 @@ class _RegisterAgenteViewState extends State<RegisterAgenteView> {
 
     final data = {
       "nombre": _nombreController.text,
-      "username": _usernameController.text,
-      "password": _passwordController.text,
       "correo": _correoController.text,
       "ci": _ciController.text,
       "telefono": _telefonoController.text,
@@ -58,15 +59,26 @@ class _RegisterAgenteViewState extends State<RegisterAgenteView> {
       );
 
       final resData = jsonDecode(response.body);
-      if (response.statusCode == 200 && resData['status'] == 1) {
-        // Registro exitoso
+      if (response.statusCode == 200) {
+        // Mostrar el mensaje que viene del backend
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Agente registrado con éxito")),
+          SnackBar(content: Text(resData['message'] ?? "Solicitud enviada")),
         );
-        context.pop(); // Volver a la página anterior
+
+        // Si quieres cerrar la pantalla solo si fue éxito (status == 1)
+        if (resData['status'] == 1) {
+          if (mounted) {
+            context.pop(); // Volver a la pantalla anterior
+          } // Volver a la pantalla anterior
+        } else {
+          // Si status != 1, mostrar error
+          setState(() {
+            _errorMessage = resData['message'] ?? "Error desconocido";
+          });
+        }
       } else {
         setState(() {
-          _errorMessage = resData['message'] ?? 'Error desconocido';
+          _errorMessage = resData['message'] ?? "Error desconocido";
         });
       }
     } catch (e) {
@@ -121,19 +133,6 @@ class _RegisterAgenteViewState extends State<RegisterAgenteView> {
                         label: "Nombre completo",
                         icon: Icons.person,
                         validatorMsg: "Ingrese el nombre",
-                      ),
-                      _buildTextField(
-                        controller: _usernameController,
-                        label: "Username",
-                        icon: Icons.account_circle,
-                        validatorMsg: "Ingrese el username",
-                      ),
-                      _buildTextField(
-                        controller: _passwordController,
-                        label: "Contraseña",
-                        icon: Icons.lock,
-                        validatorMsg: "Ingrese una contraseña",
-                        obscureText: true,
                       ),
                       _buildTextField(
                         controller: _correoController,

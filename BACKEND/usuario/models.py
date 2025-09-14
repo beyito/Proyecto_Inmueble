@@ -104,3 +104,39 @@ class PasswordResetCode(models.Model):
 
     def is_valid(self):
         return not self.is_used and timezone.now() <= self.expires_at
+    
+class SolicitudAgente(models.Model):
+    ESTADO_CHOICES = [
+        ('pendiente', 'Pendiente'),
+        ('aceptado', 'Aceptado'),
+        ('rechazado', 'Rechazado'),
+    ]
+
+    idSolicitud = models.AutoField(primary_key=True)
+    # Datos del agente solicitante
+    nombre = models.CharField(max_length=100)
+    correo = models.EmailField(unique=True)
+    telefono = models.CharField(max_length=20)
+    numero_licencia = models.CharField(max_length=50, unique=True)
+    experiencia = models.IntegerField(default=0)
+    ci = models.CharField(max_length=20, unique = True)
+    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='pendiente')
+    fecha_solicitud = models.DateTimeField(auto_now_add=True)
+    
+    # Relación con Usuario (nullable, se llena al aprobar)
+    idUsuario = models.OneToOneField(
+        Usuario,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        db_column="idUsuario"
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "solicitud_agente"
+
+    def __str__(self):
+        return f"{self.nombre} - {self.estado}"

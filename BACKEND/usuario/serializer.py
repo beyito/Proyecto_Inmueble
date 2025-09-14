@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Usuario, Cliente, Agente, Rol  
+from .models import Usuario, Cliente, Agente, Rol, SolicitudAgente  
 
 
 class UsuarioSerializer(serializers.ModelSerializer):
@@ -95,46 +95,6 @@ class AgenteSerializer(serializers.ModelSerializer):
 
         return instance
 
-# class AgenteSerializer(serializers.ModelSerializer):
-#     password = serializers.CharField(write_only=True)
-#     numero_licencia = serializers.CharField(write_only=True, required = False)
-#     experiencia = serializers.IntegerField(write_only=True, required = False)
-
-#     class Meta:
-#         model = Usuario
-#         fields = ['username', 'nombre', 'correo', 'telefono', 'password','ci','idRol','rolNombre','numero_licencia', 'experiencia']
-
-#     def create(self, validated_data):
-#         numero_licencia = validated_data.pop('numero_licencia', None)
-#         experiencia = validated_data.pop('experiencia', None)
-#         usuario = Usuario.objects.create(**validated_data)
-#         usuario.set_password(validated_data['password'])
-#         usuario.save()
-#         if numero_licencia and experiencia is not None:
-#             Agente.objects.create(idUsuario=usuario, numero_licencia=numero_licencia, experiencia=experiencia)
-#         return usuario
-
-#     def update(self, instance, validated_data):
-#         # Actualizar campos de Usuario
-
-#         instance.nombre = validated_data.get('nombre', instance.nombre)
-#         instance.correo = validated_data.get('correo', instance.correo)
-#         instance.telefono = validated_data.get('telefono', instance.telefono)
-#         instance.ci = validated_data.get('ci', instance.ci)
-#         password = validated_data.get('password', None)
-#         if password:
-#             self.password = password
-#             instance.set_password(self.password)
-#         instance.save()
-
-#         # Actualizar campos de Agente
-#         if hasattr(instance, 'agente'):
-#             instance.agente.numero_licencia = validated_data.get('numero_licencia', instance.agente.numero_licencia)
-#             instance.agente.experiencia = validated_data.get('experiencia', instance.agente.experiencia)
-#             instance.agente.save()
-
-#         return instance
-
 class PasswordResetRequestSerializer(serializers.Serializer):
     correo = serializers.EmailField()
 
@@ -147,3 +107,28 @@ class PasswordResetVerifyCodeSerializer(serializers.Serializer):
 class SetNewPasswordSerializer(serializers.Serializer):
     correo = serializers.EmailField()
     password = serializers.CharField(min_length=6, write_only=True)
+
+class SolicitudAgenteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SolicitudAgente
+        fields = '__all__'
+
+    def validate_correo(self, value):
+        # Verifica que el correo no esté vacío
+        if not value:
+            raise serializers.ValidationError("El correo no puede estar vacío")
+        # Verifica que no exista otra solicitud con el mismo correo
+        if SolicitudAgente.objects.filter(correo=value).exists():
+            raise serializers.ValidationError("Ya existe una solicitud con este correo")
+        return value
+
+    def create(self, validated_data):
+        # Creamos la solicitud de agente
+        solicitud = SolicitudAgente.objects.create(**validated_data)
+        return solicitud
+
+class RolSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Rol
+        fields = ["idRol", "nombre", "created_at", "updated_at"] 
+

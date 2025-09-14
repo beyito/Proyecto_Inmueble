@@ -5,10 +5,10 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework import status
-from .serializer import UsuarioSerializer, ClienteSerializer, AgenteSerializer, PasswordResetRequestSerializer, PasswordResetVerifyCodeSerializer, SetNewPasswordSerializer
+from .serializer import UsuarioSerializer, ClienteSerializer, AgenteSerializer, PasswordResetRequestSerializer, PasswordResetVerifyCodeSerializer, SetNewPasswordSerializer, RolSerializer, SolicitudAgenteSerializer
 from django.core.mail import send_mail
 from django.contrib.auth.models import User
-from .models import PasswordResetCode, Usuario, Cliente, Agente, PasswordResetCode
+from .models import PasswordResetCode, Usuario, Cliente, PasswordResetCode, Rol, SolicitudAgente
 from rest_framework.views import APIView
 from django.conf import settings
 from reportlab.lib.pagesizes import LETTER
@@ -185,23 +185,31 @@ def registerCliente(request):
 
 @api_view(['POST'])
 def registerAgente(request):
-    request.data['idRol'] = 3 
-    serializer = AgenteSerializer(data=request.data)
-    if serializer.is_valid():
-        usuario = AgenteSerializer.create(AgenteSerializer(), validated_data=serializer.validated_data)
-        token = Token.objects.create(user=usuario)
+    correo = request.data.get('correo')
+
+    # Verificar si ya existe un usuario con rol 'Agente'
+    if Usuario.objects.filter(correo=correo, idRol__nombre='Agente').exists():
         return Response({
-            "status": 1,
-            "error": 0,
-            "message": "REGISTRO DE AGENTE EXITOSO",
-            "values": {"token": token.key, "user": serializer.data}
-        })    
+            "status": 2,
+            "error": 1,
+            "message": "Usted ya es un agente registrado",
+            "values": {}
+        })
+
+    # Crear o actualizar la solicitud pendiente
+    solicitud, created = SolicitudAgente.objects.update_or_create(
+        correo=correo,
+        estado='pendiente',
+        defaults=request.data
+    )
+
+    serializer = SolicitudAgenteSerializer(solicitud)
 
     return Response({
-        "status": 2,
-        "error": 1,
-        "message": "ERROR EN EL REGISTRO DE AGENTE",
-        "values": serializer.errors
+        "status": 1,
+        "error": 0,
+        "message": "SOLICITUD ENVIADA, TE ENVIAREMOS UN MENSAJE CUANDO SEA APROBADA",
+        "values": {"solicitud_id": solicitud.idSolicitud, "solicitud": serializer.data}
     })
 
 
