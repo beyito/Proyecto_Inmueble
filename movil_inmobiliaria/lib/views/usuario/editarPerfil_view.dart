@@ -19,6 +19,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   late TextEditingController usernameController;
   late TextEditingController nombreController;
   late TextEditingController correoController;
+  late TextEditingController ciController;
   late TextEditingController telefonoController;
 
   bool loading = false;
@@ -32,6 +33,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
     nombreController = TextEditingController(text: widget.userData?['nombre']);
     correoController = TextEditingController(text: widget.userData?['correo']);
+    ciController = TextEditingController(text: widget.userData?['ci']);
     telefonoController = TextEditingController(
       text: widget.userData?['telefono'],
     );
@@ -64,6 +66,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         "nombre": nombreController.text,
         "correo": correoController.text,
         "telefono": telefonoController.text,
+        "ci": ciController.text,
       }),
     );
 
@@ -98,6 +101,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       "Correo",
                       correoController,
                       keyboard: TextInputType.emailAddress,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildTextField(
+                      "CI",
+                      ciController,
+                      keyboard: TextInputType.number,
                     ),
                     const SizedBox(height: 16),
                     _buildTextField(

@@ -29,7 +29,7 @@ class AuthService {
             headers: {'Content-Type': 'application/json'},
             body: jsonEncode({'username': username, 'password': password}),
           )
-          .timeout(const Duration(seconds: 3)); // <-- aquí el timeout
+          .timeout(const Duration(seconds: 10)); // <-- aquí el timeout
 
       final data = jsonDecode(response.body);
 

@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AppSidebar from './AppSidebar'
 
-const BASE = 'http://127.0.0.1:8000/usuario'
+const BASE = 'https://proyecto-inmueble.onrender.com/usuario'
 
 export default function Dashboard() {
   const navigate = useNavigate()

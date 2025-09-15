@@ -65,7 +65,7 @@ export default function AppSidebar({
       }
       const token = localStorage.getItem("token");
       const res = await fetch(
-        `http://127.0.0.1:8000/usuario/${user.id}/update`,
+        `https://proyecto-inmueble.onrender.com/usuario/${user.id}/update`,
         {
           method: "PATCH",
           headers: {

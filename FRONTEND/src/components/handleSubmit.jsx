@@ -12,8 +12,8 @@ const handleSubmit = () => {
 
   const endpoint =
     action === "Login"
-      ? "http://localhost:8000/api/login/"
-      : "http://localhost:8000/api/register/";
+      ? "https://proyecto-inmueble.onrender.com/api/login/"
+      : "https://proyecto-inmueble.onrender.com/api/register/";
 
   const payload =
     action === "Login" ? { username, password } : { username, email, password };

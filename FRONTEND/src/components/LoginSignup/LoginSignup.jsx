@@ -130,7 +130,7 @@ export default function LoginSignup() {
     navigate("/recuperar-contraseña");
   };
 
-  const BASE = "http://127.0.0.1:8000/usuario"; // recuerda los slashes al final en fetch
+  const BASE = "https://proyecto-inmueble.onrender.com/usuario"; // recuerda los slashes al final en fetch
 
   // Helper para POST con manejo de JSON/HTML
   async function postJSON(url, body) {

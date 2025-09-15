@@ -15,7 +15,7 @@ const RecuperarContrasena = () => {
     return <Navigate to='/' />
   }
 
-  const BASE = 'http://127.0.0.1:8000/usuario'
+  const BASE = 'https://proyecto-inmueble.onrender.com/usuario'
 
   const handleRequestCode = async () => {
     setLoading(true)

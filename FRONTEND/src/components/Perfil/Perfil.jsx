@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 
 const Perfil = () => {
   const [data, setData] = useState(null);
-  const BASE = "http://127.0.0.1:8000/usuario";
+  const BASE = "https://proyecto-inmueble.onrender.com/usuario";
 
   useEffect(() => {
     const load = async () => {

@@ -28,7 +28,7 @@ export default function ModalContratoAgente({ onClose }) {
     setMessage('')
     try {
       const res = await fetch(
-        'http://127.0.0.1:8000/usuario/generarContratoPdf/',
+        'https://proyecto-inmueble.onrender.com/usuario/generarContratoPdf/',
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
