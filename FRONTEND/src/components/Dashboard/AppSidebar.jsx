@@ -1,5 +1,6 @@
 // src/components/Dashboard/AppSidebar.jsx
 import React, { useEffect, useMemo, useState } from "react";
+import ModalContratoAgente from "./ModalCrearContratoAgente";
 import "./AppSidebar.css";
 
 export default function AppSidebar({
